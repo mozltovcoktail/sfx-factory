@@ -916,13 +916,13 @@ function playFartPreset(key) {
 // ---- SFX preset map ----
 const sfxPresetDefs = {
     car_horn:       { buf:'car-horn',       duration:0.8,  pitch:110, wetness:0.10, reverb:0.25, flappiness:2,  volume:0.85 },
-    laser:          { buf:'laser',          duration:1.0,  pitch:110, wetness:0.05, reverb:0.25, flappiness:4,  volume:0.85 },
+    laser:          { buf:'raygun-zap',     duration:1.0,  pitch:110, wetness:0.05, reverb:0.25, flappiness:4,  volume:0.85 },
     wilhelm:        { buf:'wilhelm',        duration:1.2,  pitch:110, wetness:0.05, reverb:0.35, flappiness:2,  volume:0.85 },
     cash_register:  { buf:'cash-register',  duration:0.6,  pitch:120, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
     explosion:      { buf:'explosion',      duration:2.5,  pitch:85,  wetness:0.20, reverb:0.70, flappiness:3,  volume:0.85 },
     sad_trombone:   { buf:'sad-trombone',   duration:4.0,  pitch:100, wetness:0.05, reverb:0.30, flappiness:2,  volume:0.85 },
     fanfare:        { buf:'fanfare',        duration:2.5,  pitch:110, wetness:0.05, reverb:0.45, flappiness:2,  volume:0.85 },
-    laser_fast:     { buf:'raygun-zap',     duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    laser_fast:     { buf:'laser',          duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
     dj_airhorn:     { buf:'dj-airhorn',     duration:1.5,  pitch:100, wetness:0.05, reverb:0.20, flappiness:2,  volume:0.85 },
     record_scratch: { buf:'record-scratch', duration:1.0,  pitch:110, wetness:0.05, reverb:0.10, flappiness:2,  volume:0.85 },
     boing:          { buf:'boing',          duration:0.8,  pitch:110, wetness:0.05, reverb:0.20, flappiness:2,  volume:0.85 },
@@ -941,6 +941,25 @@ function playSfxPreset(key) {
         const shots=5, gap=0.25;
         for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(buf,def), i*gap*1000);
         return shots * gap;
+    }
+    if (key === 'slide_whistle') {
+        // Upward pitch slide via playbackRate ramp
+        const ctx = getAudioCtx();
+        const now = ctx.currentTime;
+        const dur = def.duration;
+        const env = ctx.createGain();
+        env.gain.setValueAtTime(def.volume, now);
+        env.gain.setValueAtTime(def.volume, now + dur * 0.8);
+        env.gain.exponentialRampToValueAtTime(0.001, now + dur + 0.05);
+        env.connect(ctx.destination);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.playbackRate.setValueAtTime(0.6, now);
+        src.playbackRate.exponentialRampToValueAtTime(2.2, now + dur);
+        src.connect(env);
+        src.start(now);
+        src.stop(now + dur + 0.1);
+        return dur;
     }
     if (key === 'pizza_moon') {
         // CHAOS: fanfare + crowd roar + laser barrage all at once
