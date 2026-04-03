@@ -548,12 +548,51 @@
     <p>&copy; 2026 The Fart Factory &mdash; All Toots Reserved.</p>
     <p style="margin-top:0.5rem;">Made with 💨 and questionable life choices</p>
     <p style="margin-top:0.3rem;font-size:0.75rem;">No butts were harmed in the making of this website.</p>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(124,252,0,0.1);font-size:0.75rem;color:#5a4a2a;max-width:600px;margin-left:auto;margin-right:auto;">
+        <p style="color:#7a6a4a;margin-bottom:0.4rem;">Sound Effects</p>
+        <p>"Juicy Fart" series by <a href="https://freesound.org/people/Zott820/" style="color:#7cfc00;">Zott820</a> via <a href="https://freesound.org" style="color:#7cfc00;">Freesound.org</a> &mdash; <a href="https://creativecommons.org/publicdomain/zero/1.0/" style="color:#7cfc00;">CC0 1.0 Universal</a></p>
+    </div>
 </footer>
 
 <script>
 // ======== AUDIO ENGINE ========
 let audioCtx = null;
 let fartCount = 0;
+
+// ---- Sample buffers ----
+const SOUNDS = {
+    squeaky:     'sfx/squeaky.mp3',
+    juicy:       'sfx/juicy.mp3',
+    'long-wet':  'sfx/long-wet.mp3',
+    'long-rumbly':'sfx/long-rumbly.mp3',
+    'quick-wet': 'sfx/quick-wet.mp3',
+    'medium-wet':'sfx/medium-wet.mp3',
+    'big-wet':   'sfx/big-wet.mp3',
+};
+const buffers = {};
+let soundsReady = false;
+
+async function loadSounds() {
+    const ctx = getAudioCtx();
+    const entries = Object.entries(SOUNDS);
+    await Promise.all(entries.map(async ([name, path]) => {
+        try {
+            const res = await fetch(path);
+            const arrayBuf = await res.arrayBuffer();
+            buffers[name] = await ctx.decodeAudioData(arrayBuf);
+        } catch(e) { console.warn('Failed to load', name, e); }
+    }));
+    soundsReady = true;
+    document.getElementById('fartBtn').style.opacity = '1';
+    document.getElementById('fartBtn').style.pointerEvents = 'auto';
+}
+
+// Start loading immediately but don't block page render
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('fartBtn').style.opacity = '0.4';
+    document.getElementById('fartBtn').style.pointerEvents = 'none';
+    loadSounds();
+});
 
 function getAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -572,7 +611,7 @@ function getParams() {
     };
 }
 
-// ---- Shared utilities ----
+// ---- Dead code removed below, kept makeNoise for reference only ----
 function makeNoise(ctx, durationSec) {
     const len = Math.ceil(ctx.sampleRate * (durationSec + 0.3));
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -1107,148 +1146,145 @@ function synthCustom(params) {
     return dur;
 }
 
-// ======== ORIGINAL SIMPLE SYNTH (Basic mode) ========
-function synthesizeFart(params) {
+// ======== SAMPLE-BASED FART PLAYER ========
+
+function makeReverb(ctx, secs) {
+    const rate = ctx.sampleRate;
+    const len = Math.ceil(rate * Math.max(0.3, secs));
+    const buf = ctx.createBuffer(2, len, rate);
+    for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.8);
+    }
+    const conv = ctx.createConvolver();
+    conv.buffer = buf;
+    return conv;
+}
+
+function makeDistortion(ctx, amount) {
+    const ws = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+        const x = (i / 128) - 1;
+        curve[i] = (Math.PI + amount) * x / (Math.PI + amount * Math.abs(x));
+    }
+    ws.curve = curve;
+    return ws;
+}
+
+// Pick the best-matching base sound given pitch/wetness
+function pickSound(pitch, wetness) {
+    if (pitch > 200) return buffers['squeaky'];
+    if (wetness > 0.7) return buffers['big-wet'];
+    if (wetness > 0.5) return buffers['juicy'];
+    if (pitch < 70)   return buffers['long-rumbly'];
+    if (pitch < 100)  return buffers['long-wet'];
+    if (wetness < 0.1) return buffers['squeaky'];
+    return buffers['medium-wet'];
+}
+
+function playSample(buffer, params) {
+    if (!buffer) return 0;
     const ctx = getAudioCtx();
     const now = ctx.currentTime;
     const { duration, pitch, wetness, reverb, flappiness, volume } = params;
 
-    // Real farts are ~80% noise, ~20% tone. Noise with flutter IS the fart.
-    const totalLen = Math.ceil(ctx.sampleRate * (duration + 0.3));
+    // playbackRate: pitch slider 40-300 maps to rate 0.4-2.5
+    const rate = Math.pow(pitch / 120, 1.4);
+    // actual sound duration accounts for playback rate
+    const soundDur = Math.min(duration, buffer.duration / rate);
 
-    // ---- Master output with reverb mix ----
-    const master = ctx.createGain();
-    master.gain.value = 1;
-    const dry = ctx.createGain(); dry.gain.value = 1 - reverb * 0.6;
-    const wet = ctx.createGain(); wet.gain.value = reverb * 0.7;
-    const rev = makeReverb(ctx, reverb * 1.5 + 0.2);
-    master.connect(dry).connect(ctx.destination);
-    master.connect(rev).connect(wet).connect(ctx.destination);
+    // ---- Source ----
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.playbackRate.value = rate;
 
-    // ---- Broadband noise — the main body of the fart ----
-    const noiseBuf = ctx.createBuffer(1, totalLen, ctx.sampleRate);
-    const nd = noiseBuf.getChannelData(0);
-    // Slightly pink-ish noise (lowpass neighboring samples for body)
-    let last = 0;
-    for (let i = 0; i < totalLen; i++) {
-        const white = Math.random() * 2 - 1;
-        last = last * 0.4 + white * 0.6; // mild low-pass = pinkish
-        nd[i] = last;
+    // ---- Wetness → distortion/saturation ----
+    const dist = makeDistortion(ctx, wetness * 80);
+
+    // ---- Flappiness → tremolo (AM modulation) ----
+    const tremoloGain = ctx.createGain();
+    tremoloGain.gain.value = 1;
+    if (flappiness > 3) {
+        const lfo = ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = flappiness;
+        const lfoDepth = ctx.createGain();
+        lfoDepth.gain.value = 0.25; // 25% depth — subtle flutter
+        lfo.connect(lfoDepth).connect(tremoloGain.gain);
+        lfo.start(now);
+        lfo.stop(now + soundDur + 0.1);
     }
-    const noise = ctx.createBufferSource();
-    noise.buffer = noiseBuf;
 
-    // Bandpass centered on fart frequency — pitch slider controls this
-    const bpf = ctx.createBiquadFilter();
-    bpf.type = 'bandpass';
-    bpf.frequency.setValueAtTime(pitch * 0.8, now);
-    bpf.frequency.exponentialRampToValueAtTime(pitch * 0.35, now + duration);
-    bpf.Q.value = 0.6 + wetness * 2; // wetter = more resonant = more splattery
-
-    // Second bandpass layered for body
-    const bpf2 = ctx.createBiquadFilter();
-    bpf2.type = 'bandpass';
-    bpf2.frequency.setValueAtTime(pitch * 0.4, now);
-    bpf2.frequency.exponentialRampToValueAtTime(pitch * 0.2, now + duration);
-    bpf2.Q.value = 0.4;
-
-    // ---- Amplitude flutter (the "flapping lips" — this is what makes it a fart) ----
-    const flutter = ctx.createOscillator();
-    flutter.type = 'square';
-    // Flutter rate slows as fart loses pressure
-    flutter.frequency.setValueAtTime(flappiness, now);
-    flutter.frequency.exponentialRampToValueAtTime(Math.max(flappiness * 0.25, 4), now + duration);
-    const flutterDepth = ctx.createGain();
-    flutterDepth.gain.value = 0.55; // 55% AM depth — square wave chops it
-
-    const flutterMix = ctx.createGain();
-    flutterMix.gain.value = 0.45; // DC offset so it doesn't go fully silent
-    flutter.connect(flutterDepth);
-
-    // AM envelope: sharp attack, linear decay (pressure releasing)
+    // ---- Amplitude envelope ----
     const env = ctx.createGain();
-    env.gain.setValueAtTime(0, now);
-    env.gain.linearRampToValueAtTime(volume * 0.9, now + 0.012); // nearly instant attack
-    env.gain.setValueAtTime(volume * 0.9, now + duration * 0.15);
-    env.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    env.gain.setValueAtTime(volume, now);
+    env.gain.setValueAtTime(volume, now + soundDur * 0.75);
+    env.gain.exponentialRampToValueAtTime(0.001, now + soundDur + 0.05);
 
-    // Modulate the envelope gain with flutter
-    flutterDepth.connect(env.gain);
+    // ---- Reverb mix ----
+    const dry = ctx.createGain();
+    dry.gain.value = 1 - reverb * 0.75;
+    const wet = ctx.createGain();
+    wet.gain.value = reverb * 0.8;
+    const rev = makeReverb(ctx, reverb * 2.5 + 0.2);
 
-    // ---- Route noise through filters and envelope ----
-    noise.connect(bpf);
-    noise.connect(bpf2);
-    const noiseMix = ctx.createGain(); noiseMix.gain.value = 0.7;
-    bpf.connect(noiseMix);
-    bpf2.connect(noiseMix);
+    // Chain: src → dist → tremolo → env → dry → out
+    //                                    ↘ reverb → wet → out
+    src.connect(dist).connect(tremoloGain).connect(env);
+    env.connect(dry).connect(ctx.destination);
+    env.connect(rev).connect(wet).connect(ctx.destination);
 
-    // ---- Wet "splat" layer (wetness slider adds sputtery texture) ----
-    // Extra noise burst through a high-resonance filter = wet, splattery
-    if (wetness > 0.1) {
-        const splatBuf = ctx.createBuffer(1, totalLen, ctx.sampleRate);
-        const sd = splatBuf.getChannelData(0);
-        for (let i = 0; i < totalLen; i++) sd[i] = Math.random() * 2 - 1;
-        const splat = ctx.createBufferSource();
-        splat.buffer = splatBuf;
-        const splatFilt = ctx.createBiquadFilter();
-        splatFilt.type = 'bandpass';
-        splatFilt.frequency.setValueAtTime(pitch * 0.6, now);
-        splatFilt.frequency.exponentialRampToValueAtTime(pitch * 0.25, now + duration);
-        splatFilt.Q.value = 3 + wetness * 8; // high Q = very resonant, bubbly
-        const splatGain = ctx.createGain();
-        splatGain.gain.setValueAtTime(0, now);
-        splatGain.gain.linearRampToValueAtTime(wetness * 0.5, now + 0.015);
-        splatGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        // Modulate with flutter too
-        flutterDepth.connect(splatGain.gain);
-        splat.connect(splatFilt).connect(splatGain).connect(env);
-        splat.start(now); splat.stop(now + duration + 0.1);
-    }
+    src.start(now);
+    src.stop(now + soundDur + 0.15);
 
-    noiseMix.connect(env).connect(master);
-    flutterMix.connect(env); // DC offset to prevent full cutoff
-
-    noise.start(now); flutter.start(now);
-    noise.stop(now + duration + 0.2); flutter.stop(now + duration + 0.2);
-    return duration;
+    return soundDur;
 }
 
-// Basic mode preset params (original param-based approach)
-const basicPresets = {
-    squeaker:    { duration: 0.2, pitch: 280, wetness: 0.05, reverb: 0.10, flappiness: 30, volume: 0.40 },
-    thunderclap: { duration: 2.5, pitch: 50,  wetness: 0.30, reverb: 0.50, flappiness: 8,  volume: 0.90 },
-    machine_gun: { duration: 1.0, pitch: 150, wetness: 0.10, reverb: 0.20, flappiness: 40, volume: 0.70 },
-    whoopee:     { duration: 0.8, pitch: 100, wetness: 0.25, reverb: 0.30, flappiness: 15, volume: 0.75 },
-    deflating:   { duration: 3.0, pitch: 200, wetness: 0.15, reverb: 0.20, flappiness: 5,  volume: 0.50 },
-    tuba:        { duration: 1.5, pitch: 45,  wetness: 0.20, reverb: 0.60, flappiness: 6,  volume: 0.85 },
-    ripper:      { duration: 1.2, pitch: 90,  wetness: 0.90, reverb: 0.30, flappiness: 20, volume: 0.80 },
-    stealth:     { duration: 0.5, pitch: 180, wetness: 0.40, reverb: 0.10, flappiness: 2,  volume: 0.05 },
-    cathedral:   { duration: 1.0, pitch: 80,  wetness: 0.25, reverb: 1.00, flappiness: 12, volume: 0.70 },
-    duck:        { duration: 0.3, pitch: 220, wetness: 0.10, reverb: 0.15, flappiness: 25, volume: 0.60 },
-    volcano:     { duration: 3.0, pitch: 40,  wetness: 0.80, reverb: 0.80, flappiness: 10, volume: 1.00 },
-    morse:       { duration: 0.15,pitch: 160, wetness: 0.05, reverb: 0.20, flappiness: 35, volume: 0.55 },
+// synthesizeFart: pick the right sample based on sliders, apply effects
+function synthesizeFart(params) {
+    const buf = pickSound(params.pitch, params.wetness);
+    return playSample(buf, params);
+}
+
+// ======== PRESET DEFINITIONS — sample + effect params ========
+// Each preset picks a specific buffer + slider values
+const presetDefs = {
+    squeaker:    { buf: 'squeaky',      duration: 0.3,  pitch: 260, wetness: 0.05, reverb: 0.10, flappiness: 28, volume: 0.65 },
+    thunderclap: { buf: 'long-rumbly',  duration: 2.5,  pitch: 58,  wetness: 0.30, reverb: 0.55, flappiness: 6,  volume: 0.90 },
+    machine_gun: { buf: 'quick-wet',    duration: 0.18, pitch: 140, wetness: 0.15, reverb: 0.15, flappiness: 38, volume: 0.75 },
+    whoopee:     { buf: 'medium-wet',   duration: 0.9,  pitch: 105, wetness: 0.30, reverb: 0.35, flappiness: 14, volume: 0.80 },
+    deflating:   { buf: 'long-wet',     duration: 3.0,  pitch: 190, wetness: 0.18, reverb: 0.20, flappiness: 4,  volume: 0.55 },
+    tuba:        { buf: 'long-rumbly',  duration: 1.6,  pitch: 48,  wetness: 0.22, reverb: 0.65, flappiness: 5,  volume: 0.88 },
+    ripper:      { buf: 'big-wet',      duration: 1.3,  pitch: 88,  wetness: 0.92, reverb: 0.28, flappiness: 22, volume: 0.85 },
+    stealth:     { buf: 'squeaky',      duration: 0.5,  pitch: 170, wetness: 0.35, reverb: 0.08, flappiness: 2,  volume: 0.04 },
+    cathedral:   { buf: 'medium-wet',   duration: 1.0,  pitch: 82,  wetness: 0.28, reverb: 1.00, flappiness: 10, volume: 0.72 },
+    duck:        { buf: 'squeaky',      duration: 0.25, pitch: 230, wetness: 0.12, reverb: 0.12, flappiness: 24, volume: 0.65 },
+    volcano:     { buf: 'long-wet',     duration: 3.0,  pitch: 42,  wetness: 0.85, reverb: 0.82, flappiness: 9,  volume: 1.00 },
+    morse:       { buf: 'quick-wet',    duration: 0.14, pitch: 155, wetness: 0.08, reverb: 0.18, flappiness: 32, volume: 0.60 },
 };
 
-// ======== DISPATCH (Advanced mode presets) ========
 function playPreset(name) {
-    const vol = parseFloat(document.getElementById('volume').value) / 100;
-    const rev = parseFloat(document.getElementById('reverb').value) / 100;
-
-    const dispatches = {
-        squeaker:    () => synthSqueaker(vol, rev),
-        thunderclap: () => synthThunderclap(vol, rev),
-        machine_gun: () => synthMachineGun(vol, rev),
-        whoopee:     () => synthWhoopee(vol, rev, 15, 0.8, 110),
-        deflating:   () => synthDeflating(vol, rev),
-        tuba:        () => synthTuba(vol, rev),
-        ripper:      () => synthRipper(vol, rev),
-        stealth:     () => synthStealth(vol),
-        cathedral:   () => synthCathedral(vol),
-        duck:        () => synthDuck(vol, rev),
-        volcano:     () => synthVolcano(vol, rev),
-        morse:       () => synthMorse(vol, rev),
-    };
-    return dispatches[name] ? dispatches[name]() : 0;
+    const def = presetDefs[name];
+    if (!def) return 0;
+    const buf = buffers[def.buf];
+    if (name === 'machine_gun') {
+        const shots = 7;
+        const gap = 0.19;
+        for (let i = 0; i < shots; i++) {
+            setTimeout(() => playSample(buf, def), i * gap * 1000);
+        }
+        return shots * gap;
+    }
+    if (name === 'morse') {
+        const dot = def.duration;
+        playSample(buf, def);
+        setTimeout(() => playSample(buf, def), dot * 1.8 * 1000);
+        setTimeout(() => playSample(buf, { ...def, duration: dot * 3.5 }), dot * 3.6 * 1000);
+        return dot * 7.5;
+    }
+    return playSample(buf, def);
 }
 
 // ======== VISUALIZER ========
@@ -1362,11 +1398,8 @@ function afterFart(dur, params) {
 
 // ======== PRESETS ========
 function loadPreset(name) {
-    const p = basicPresets[name];
-    if (p) {
-        const dur = synthesizeFart(p);
-        afterFart(dur, p);
-    }
+    const dur = playPreset(name);
+    afterFart(dur, presetDefs[name] || getParams());
 }
 
 // ======== SLIDER LABEL UPDATES ========
