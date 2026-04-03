@@ -1113,61 +1113,103 @@ function synthesizeFart(params) {
     const now = ctx.currentTime;
     const { duration, pitch, wetness, reverb, flappiness, volume } = params;
 
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.6, now);
-    masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.1);
+    // Real farts are ~80% noise, ~20% tone. Noise with flutter IS the fart.
+    const totalLen = Math.ceil(ctx.sampleRate * (duration + 0.3));
 
-    const dryGain = ctx.createGain();
-    dryGain.gain.value = 1 - reverb * 0.7;
-    const wetGain = ctx.createGain();
-    wetGain.gain.value = reverb;
-    const reverbNode = makeReverb(ctx, reverb * 2 + 0.3);
-    masterGain.connect(dryGain).connect(ctx.destination);
-    masterGain.connect(reverbNode).connect(wetGain).connect(ctx.destination);
+    // ---- Master output with reverb mix ----
+    const master = ctx.createGain();
+    master.gain.value = 1;
+    const dry = ctx.createGain(); dry.gain.value = 1 - reverb * 0.6;
+    const wet = ctx.createGain(); wet.gain.value = reverb * 0.7;
+    const rev = makeReverb(ctx, reverb * 1.5 + 0.2);
+    master.connect(dry).connect(ctx.destination);
+    master.connect(rev).connect(wet).connect(ctx.destination);
 
-    const osc = ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(pitch, now);
-    osc.frequency.exponentialRampToValueAtTime(pitch * 0.4, now + duration);
+    // ---- Broadband noise — the main body of the fart ----
+    const noiseBuf = ctx.createBuffer(1, totalLen, ctx.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    // Slightly pink-ish noise (lowpass neighboring samples for body)
+    let last = 0;
+    for (let i = 0; i < totalLen; i++) {
+        const white = Math.random() * 2 - 1;
+        last = last * 0.4 + white * 0.6; // mild low-pass = pinkish
+        nd[i] = last;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuf;
 
-    const lfo = ctx.createOscillator();
-    lfo.type = 'square';
-    lfo.frequency.setValueAtTime(flappiness, now);
-    lfo.frequency.linearRampToValueAtTime(flappiness * 0.5, now + duration);
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = pitch * 0.3;
-    lfo.connect(lfoGain).connect(osc.frequency);
+    // Bandpass centered on fart frequency — pitch slider controls this
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(pitch * 0.8, now);
+    bpf.frequency.exponentialRampToValueAtTime(pitch * 0.35, now + duration);
+    bpf.Q.value = 0.6 + wetness * 2; // wetter = more resonant = more splattery
 
-    const noiseLen = Math.ceil(ctx.sampleRate * (duration + 0.2));
-    const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
-    const noiseData = noiseBuf.getChannelData(0);
-    for (let i = 0; i < noiseLen; i++) noiseData[i] = Math.random() * 2 - 1;
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuf;
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'bandpass';
-    noiseFilter.frequency.value = pitch * 2;
-    noiseFilter.Q.value = 0.5 + wetness * 3;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(wetness * 0.5, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.1);
-    noiseSource.connect(noiseFilter).connect(noiseGain).connect(masterGain);
+    // Second bandpass layered for body
+    const bpf2 = ctx.createBiquadFilter();
+    bpf2.type = 'bandpass';
+    bpf2.frequency.setValueAtTime(pitch * 0.4, now);
+    bpf2.frequency.exponentialRampToValueAtTime(pitch * 0.2, now + duration);
+    bpf2.Q.value = 0.4;
 
-    const sub = ctx.createOscillator();
-    sub.type = 'sine';
-    sub.frequency.setValueAtTime(pitch * 0.25, now);
-    sub.frequency.exponentialRampToValueAtTime(pitch * 0.1, now + duration);
-    const subGain = ctx.createGain();
-    subGain.gain.setValueAtTime(0.3, now);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-    sub.connect(subGain).connect(masterGain);
+    // ---- Amplitude flutter (the "flapping lips" — this is what makes it a fart) ----
+    const flutter = ctx.createOscillator();
+    flutter.type = 'square';
+    // Flutter rate slows as fart loses pressure
+    flutter.frequency.setValueAtTime(flappiness, now);
+    flutter.frequency.exponentialRampToValueAtTime(Math.max(flappiness * 0.25, 4), now + duration);
+    const flutterDepth = ctx.createGain();
+    flutterDepth.gain.value = 0.55; // 55% AM depth — square wave chops it
 
-    const distortion = makeDistortion(ctx, 10 + wetness * 50);
-    osc.connect(distortion).connect(masterGain);
+    const flutterMix = ctx.createGain();
+    flutterMix.gain.value = 0.45; // DC offset so it doesn't go fully silent
+    flutter.connect(flutterDepth);
 
-    osc.start(now); lfo.start(now); sub.start(now); noiseSource.start(now);
-    osc.stop(now + duration + 0.15); lfo.stop(now + duration + 0.15);
-    sub.stop(now + duration + 0.15); noiseSource.stop(now + duration + 0.25);
+    // AM envelope: sharp attack, linear decay (pressure releasing)
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(volume * 0.9, now + 0.012); // nearly instant attack
+    env.gain.setValueAtTime(volume * 0.9, now + duration * 0.15);
+    env.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    // Modulate the envelope gain with flutter
+    flutterDepth.connect(env.gain);
+
+    // ---- Route noise through filters and envelope ----
+    noise.connect(bpf);
+    noise.connect(bpf2);
+    const noiseMix = ctx.createGain(); noiseMix.gain.value = 0.7;
+    bpf.connect(noiseMix);
+    bpf2.connect(noiseMix);
+
+    // ---- Wet "splat" layer (wetness slider adds sputtery texture) ----
+    // Extra noise burst through a high-resonance filter = wet, splattery
+    if (wetness > 0.1) {
+        const splatBuf = ctx.createBuffer(1, totalLen, ctx.sampleRate);
+        const sd = splatBuf.getChannelData(0);
+        for (let i = 0; i < totalLen; i++) sd[i] = Math.random() * 2 - 1;
+        const splat = ctx.createBufferSource();
+        splat.buffer = splatBuf;
+        const splatFilt = ctx.createBiquadFilter();
+        splatFilt.type = 'bandpass';
+        splatFilt.frequency.setValueAtTime(pitch * 0.6, now);
+        splatFilt.frequency.exponentialRampToValueAtTime(pitch * 0.25, now + duration);
+        splatFilt.Q.value = 3 + wetness * 8; // high Q = very resonant, bubbly
+        const splatGain = ctx.createGain();
+        splatGain.gain.setValueAtTime(0, now);
+        splatGain.gain.linearRampToValueAtTime(wetness * 0.5, now + 0.015);
+        splatGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        // Modulate with flutter too
+        flutterDepth.connect(splatGain.gain);
+        splat.connect(splatFilt).connect(splatGain).connect(env);
+        splat.start(now); splat.stop(now + duration + 0.1);
+    }
+
+    noiseMix.connect(env).connect(master);
+    flutterMix.connect(env); // DC offset to prevent full cutoff
+
+    noise.start(now); flutter.start(now);
+    noise.stop(now + duration + 0.2); flutter.stop(now + duration + 0.2);
     return duration;
 }
 
