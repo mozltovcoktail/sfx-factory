@@ -489,13 +489,18 @@
         <p id="attributionFart">"Juicy Fart" series by <a href="https://freesound.org/people/Zott820/">Zott820</a> via <a href="https://freesound.org">Freesound.org</a> &mdash; <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a></p>
         <p id="attributionSfx" style="display:none">
             Car Horn by <a href="https://freesound.org/people/DeVern/">DeVern</a> &bull;
-            Zipper by <a href="https://freesound.org/people/Sadiquecat/">Sadiquecat</a> &bull;
-            Applause by <a href="https://freesound.org/people/leo153/">leo153</a> &bull;
-            Cash Register by <a href="https://freesound.org/people/CapsLok/">CapsLok</a> &bull;
-            Explosion by <a href="https://freesound.org/people/SpliceSound/">SpliceSound</a> &bull;
-            Laser (blaster) by <a href="https://freesound.org/people/BloodPixelHero/">BloodPixelHero</a> &bull;
+            Laser by <a href="https://freesound.org/people/BloodPixelHero/">BloodPixelHero</a> &bull;
             Laser (zap) by <a href="https://freesound.org/people/belanhud/">belanhud</a> &bull;
-            Fanfare by <a href="https://freesound.org/people/jimhancock/">jimhancock</a>
+            Wilhelm Scream by <a href="https://freesound.org/people/qubodup/">qubodup</a> &bull;
+            Cash Register by <a href="https://freesound.org/people/deleted_user_96253/">deleted_user_96253</a> &bull;
+            Explosion by <a href="https://freesound.org/people/florianreichelt/">florianreichelt</a> &bull;
+            Sad Trombone by <a href="https://freesound.org/people/kirbydx/">kirbydx</a> &bull;
+            Fanfare by <a href="https://freesound.org/people/Wagna/">Wagna</a> &bull;
+            DJ Airhorn by <a href="https://freesound.org/people/neopolitansixth/">neopolitansixth</a> &bull;
+            Record Scratch by <a href="https://freesound.org/people/LiftPizzas/">LiftPizzas</a> &bull;
+            Boing by <a href="https://freesound.org/people/magnuswaker/">magnuswaker</a> &bull;
+            Slide Whistle by <a href="https://freesound.org/people/SamuelGremaud/">SamuelGremaud</a> &bull;
+            Applause by <a href="https://freesound.org/people/Department64/">Department64</a>
             &mdash; all via <a href="https://freesound.org">Freesound.org</a> / <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>
         </p>
     </div>
@@ -613,17 +618,21 @@ const MODES = {
             { stars:5, text: '"Finally, a website that takes sound effects as seriously as I do."', author: 'AudioEngineer_NotBitter' },
         ],
         presets: [
-            { key:'car_horn',       emoji:'🚗', name:'Road Rager',       desc:'Straight from rush hour' },
-            { key:'laser',          emoji:'⚡', name:'Pew Pew Laser',    desc:'Sci-fi standard' },
-            { key:'applause',       emoji:'👏', name:'Standing Ovation',  desc:'You deserve this' },
-            { key:'cash_register',  emoji:'💰', name:'Cha-Ching',         desc:'Money incoming' },
-            { key:'explosion',      emoji:'💥', name:'Big Kaboom',        desc:'Catastrophic' },
-            { key:'zipper',         emoji:'🤐', name:'The Zipper',        desc:'Smooth operator' },
-            { key:'fanfare',        emoji:'🎺', name:'Victory Fanfare',   desc:'You win!' },
+            { key:'car_horn',       emoji:'🚗', name:'Road Rager',        desc:'Straight from rush hour' },
+            { key:'laser',          emoji:'⚡', name:'Pew Pew Laser',     desc:'Sci-fi standard' },
+            { key:'wilhelm',        emoji:'😱', name:'Wilhelm Scream',    desc:'The classic' },
+            { key:'cash_register',  emoji:'💰', name:'Cha-Ching',          desc:'Money incoming' },
+            { key:'explosion',      emoji:'💥', name:'Big Kaboom',         desc:'Catastrophic' },
+            { key:'sad_trombone',   emoji:'🎺', name:'Sad Trombone',      desc:'Wah wah waaah' },
+            { key:'fanfare',        emoji:'🏆', name:'Victory Fanfare',   desc:'You win!' },
             { key:'laser_fast',     emoji:'🔫', name:'Laser Storm',       desc:'Rapid fire' },
+            { key:'dj_airhorn',     emoji:'📣', name:'DJ Airhorn',        desc:'Get hyped' },
+            { key:'record_scratch', emoji:'💿', name:'Record Scratch',    desc:'Hold up.' },
+            { key:'boing',          emoji:'🫧', name:'Boing',             desc:'Cartoon physics' },
+            { key:'slide_whistle',  emoji:'🎵', name:'Slide Whistle',     desc:'Wheeeee' },
             { key:'car_horn_long',  emoji:'🚕', name:'Endless Honk',      desc:'Maximum frustration' },
-            { key:'applause_slow',  emoji:'🌟', name:'Slow Clap',         desc:'Sarcastically yours' },
             { key:'explosion_big',  emoji:'🌋', name:'Nuke',              desc:'Don\'t.' },
+            { key:'applause',       emoji:'👏', name:'Standing Ovation',  desc:'You deserve this' },
             { key:'pizza_moon',     emoji:'🍕', name:'Pizza & Moon',      desc:'Lasers. Giants. Pizza.' },
         ],
         hofLabel: (label, count) => `${label} (${count} shot${count!==1?'s':''})`,
@@ -638,7 +647,13 @@ const MODES = {
                 fanfare:       ['🎺','🏆','🎉'],
                 laser_fast:    ['⚡','⚡','✨'],
                 car_horn_long: ['🚗','😤','🚗'],
-                applause_slow: ['👏','🌟','👏'],
+                wilhelm:       ['😱','💀','😱'],
+                sad_trombone:  ['😢','🎺','😞'],
+                dj_airhorn:    ['📣','🔊','📣'],
+                record_scratch:['💿','✋','💿'],
+                boing:         ['🫧','⭕','🫧'],
+                slide_whistle: ['🎵','🌀','🎶'],
+                applause:      ['👏','🌟','👏'],
                 explosion_big: ['💥','🌋','💥'],
                 pizza_moon:    ['🍕','🌕','🍕','⚡','🔫','🌕','🍕','⚡','🍕','🌕','💫','🏆','🍕','🌕','⚡'],
             };
@@ -700,14 +715,20 @@ const FART_SOUNDS = {
 };
 
 const SFX_SOUNDS = {
-    'car-horn':      'sfx-cool/car-horn.mp3',
-    laser:           'sfx-cool/laser.mp3',
-    'raygun-zap':    'sfx-cool/raygun-zap.mp3',
-    applause:        'sfx-cool/applause.mp3',
-    'cash-register': 'sfx-cool/cash-register.mp3',
-    explosion:       'sfx-cool/explosion.mp3',
-    zipper:          'sfx-cool/zipper.mp3',
-    fanfare:         'sfx-cool/fanfare.mp3',
+    'car-horn':       'sfx-cool/car-horn.mp3',
+    laser:            'sfx-cool/laser.mp3',
+    'raygun-zap':     'sfx-cool/raygun-zap.mp3',
+    applause:         'sfx-cool/applause.mp3',
+    'cash-register':  'sfx-cool/cash-register.mp3',
+    explosion:        'sfx-cool/explosion.mp3',
+    zipper:           'sfx-cool/zipper.mp3',
+    fanfare:          'sfx-cool/fanfare.mp3',
+    'sad-trombone':   'sfx-cool/sad-trombone.mp3',
+    'dj-airhorn':     'sfx-cool/dj-airhorn.mp3',
+    'slide-whistle':  'sfx-cool/slide-whistle.mp3',
+    wilhelm:          'sfx-cool/wilhelm.mp3',
+    boing:            'sfx-cool/boing.mp3',
+    'record-scratch': 'sfx-cool/record-scratch.mp3',
 };
 
 async function loadBuffer(ctx, path, store, key) {
@@ -884,18 +905,22 @@ function playFartPreset(key) {
 
 // ---- SFX preset map ----
 const sfxPresetDefs = {
-    car_horn:      { buf:'car-horn',      duration:0.8,  pitch:110, wetness:0.10, reverb:0.25, flappiness:2,  volume:0.85 },
-    laser:         { buf:'laser',         duration:1.0,  pitch:110, wetness:0.05, reverb:0.25, flappiness:4,  volume:0.85 },
-    applause:      { buf:'applause',      duration:2.5,  pitch:100, wetness:0.05, reverb:0.50, flappiness:2,  volume:0.80 },
-    cash_register: { buf:'cash-register', duration:0.5,  pitch:120, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
-    explosion:     { buf:'explosion',     duration:1.5,  pitch:80,  wetness:0.20, reverb:0.60, flappiness:3,  volume:0.90 },
-    zipper:        { buf:'zipper',        duration:0.6,  pitch:140, wetness:0.10, reverb:0.10, flappiness:15, volume:0.80 },
-    fanfare:       { buf:'fanfare',       duration:2.0,  pitch:110, wetness:0.05, reverb:0.40, flappiness:2,  volume:0.85 },
-    laser_fast:    { buf:'raygun-zap',    duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
-    car_horn_long: { buf:'car-horn',      duration:12.0, pitch:90,  wetness:0.05, reverb:0.30, flappiness:2,  volume:0.90 },
-    applause_slow: { buf:'applause',      duration:4.0,  pitch:80,  wetness:0.05, reverb:0.65, flappiness:1,  volume:0.70 },
-    explosion_big: { buf:'explosion',     duration:3.5,  pitch:55,  wetness:0.40, reverb:0.90, flappiness:5,  volume:1.00 },
-    pizza_moon:    { buf:'fanfare',       duration:1.5,  pitch:160, wetness:0.30, reverb:0.80, flappiness:20, volume:0.75 },
+    car_horn:       { buf:'car-horn',       duration:0.8,  pitch:110, wetness:0.10, reverb:0.25, flappiness:2,  volume:0.85 },
+    laser:          { buf:'laser',          duration:1.0,  pitch:110, wetness:0.05, reverb:0.25, flappiness:4,  volume:0.85 },
+    wilhelm:        { buf:'wilhelm',        duration:1.2,  pitch:110, wetness:0.05, reverb:0.35, flappiness:2,  volume:0.90 },
+    cash_register:  { buf:'cash-register',  duration:0.6,  pitch:120, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    explosion:      { buf:'explosion',      duration:2.5,  pitch:85,  wetness:0.20, reverb:0.70, flappiness:3,  volume:0.90 },
+    sad_trombone:   { buf:'sad-trombone',   duration:2.0,  pitch:100, wetness:0.05, reverb:0.30, flappiness:2,  volume:0.85 },
+    fanfare:        { buf:'fanfare',        duration:2.5,  pitch:110, wetness:0.05, reverb:0.45, flappiness:2,  volume:0.85 },
+    laser_fast:     { buf:'raygun-zap',     duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    dj_airhorn:     { buf:'dj-airhorn',     duration:1.5,  pitch:100, wetness:0.05, reverb:0.20, flappiness:2,  volume:0.95 },
+    record_scratch: { buf:'record-scratch', duration:1.0,  pitch:110, wetness:0.05, reverb:0.10, flappiness:2,  volume:0.85 },
+    boing:          { buf:'boing',          duration:0.8,  pitch:110, wetness:0.05, reverb:0.20, flappiness:2,  volume:0.85 },
+    slide_whistle:  { buf:'slide-whistle',  duration:1.5,  pitch:110, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    car_horn_long:  { buf:'car-horn',       duration:12.0, pitch:90,  wetness:0.05, reverb:0.30, flappiness:2,  volume:0.90 },
+    explosion_big:  { buf:'explosion',      duration:5.0,  pitch:55,  wetness:0.40, reverb:0.90, flappiness:5,  volume:1.00 },
+    applause:       { buf:'applause',       duration:3.0,  pitch:100, wetness:0.05, reverb:0.50, flappiness:2,  volume:0.80 },
+    pizza_moon:     { buf:'fanfare',        duration:1.5,  pitch:160, wetness:0.30, reverb:0.80, flappiness:20, volume:0.75 },
 };
 
 function playSfxPreset(key) {
