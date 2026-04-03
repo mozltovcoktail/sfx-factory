@@ -239,25 +239,28 @@
         .preset-btn:hover { border-color: var(--border-hover); background: rgba(0,0,0,0.5); transform: translateY(-2px); }
         .preset-btn.active { border-color: var(--accent); background: var(--accent2); box-shadow: 0 0 12px var(--accent-glow); }
 
-        /* ===== LOADED SAMPLE INDICATOR ===== */
+        /* ===== LOADED SAMPLE DROPDOWN ===== */
         .loaded-sample {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            width: 100%;
             margin: 0.6rem 0 1.2rem;
-            padding: 0.5rem 1rem;
-            background: rgba(0,0,0,0.3);
+            padding: 0.55rem 1rem;
+            background: rgba(0,0,0,0.4);
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 0.85rem;
             color: var(--text-muted);
+            font-family: 'Comic Neue', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
             transition: border-color 0.4s, color 0.4s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
+            padding-right: 2.2rem;
         }
-        .loaded-sample.has-preset {
-            border-color: var(--accent);
-            color: var(--text);
-        }
-        .loaded-sample-icon { font-size: 1rem; }
+        .loaded-sample:focus { outline: none; border-color: var(--accent); }
+        .loaded-sample option { background: #1a1a1a; color: #eee; }
         .preset-btn .emoji { font-size: 1.8rem; display: block; margin-bottom: 0.3rem; }
         .preset-btn .name  { font-size: 0.95rem; color: var(--accent); transition: color 0.4s; }
         .preset-btn .desc  { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem; transition: color 0.4s; }
@@ -389,10 +392,9 @@
     <!-- CONTROLS -->
     <div class="controls-section">
         <h2 id="labTitle">Fart Engineering Lab</h2>
-        <div id="loadedSample" class="loaded-sample">
-            <span class="loaded-sample-icon">🎵</span>
-            <span id="loadedSampleText">No preset loaded — select one from the collection below</span>
-        </div>
+        <select id="loadedSample" class="loaded-sample" onchange="if(this.value) loadPreset(this.value)">
+            <option value="">— Select a sound —</option>
+        </select>
 
         <div class="slider-group">
             <div class="slider-label">
@@ -451,7 +453,7 @@
 
     <!-- PRESETS -->
     <div class="controls-section">
-        <h2 id="collectionTitle">Signature Collection</h2>
+        <h2 id="collectionTitle">Soundboard</h2>
         <div class="presets-grid" id="presetsGrid"></div>
     </div>
 
@@ -512,7 +514,7 @@ const MODES = {
         counterLabel: 'Total farts unleashed:',
         btnText:    'RELEASE<br>THE<br>BEAST',
         labTitle:   'Fart Engineering Lab',
-        collTitle:  'Signature Collection',
+        collTitle:  'Soundboard',
         hofSubtitle:'Most-played farts of all time',
         hofEmpty:   'No farts recorded yet. History awaits your contribution.',
         footerLine1:'&copy; 2026 The Fart Factory &mdash; All Toots Reserved.',
@@ -584,7 +586,7 @@ const MODES = {
         counterLabel: 'Total sounds fired:',
         btnText:    'FIRE THE<br>CANNON',
         labTitle:   'Sound Engineering Lab',
-        collTitle:  'Arsenal',
+        collTitle:  'Soundboard',
         hofSubtitle:'Most-fired sounds of all time',
         hofEmpty:   'Nothing fired yet. Load up and let it rip.',
         footerLine1:'&copy; 2026 The Sound Cannon &mdash; All Rights Boomed.',
@@ -1049,15 +1051,8 @@ function loadPreset(key) {
     const btn = document.getElementById('presetBtn_' + key);
     if (btn) btn.classList.add('active');
 
-    // Show loaded sample in lab
-    const presetMeta = (MODES[appMode].presets || []).find(p => p.key === key);
-    const sampleEl   = document.getElementById('loadedSample');
-    const sampleTxt  = document.getElementById('loadedSampleText');
-    if (presetMeta) {
-        sampleEl.classList.add('has-preset');
-        document.getElementById('loadedSampleText').textContent =
-            `${presetMeta.emoji}  ${presetMeta.name} — sample: ${def.buf}`;
-    }
+    // Sync dropdown
+    document.getElementById('loadedSample').value = key;
 }
 
 // ========================================================
@@ -1179,8 +1174,10 @@ function setAppMode(mode) {
     // Clear active preset selection on mode switch
     activePresetKey = null;
     activeBuffer    = null;
-    document.getElementById('loadedSample').classList.remove('has-preset');
-    document.getElementById('loadedSampleText').textContent = 'No preset loaded — select one from the collection below';
+    const sel = document.getElementById('loadedSample');
+    sel.innerHTML = '<option value="">— Select a sound —</option>' +
+        modeData.presets.map(p => `<option value="${p.key}">${p.emoji} ${p.name}</option>`).join('');
+    sel.value = '';
 
     // Reset counter display, update HOF
     document.getElementById('counter').textContent = playCount;
