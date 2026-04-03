@@ -133,6 +133,7 @@
             50%       { transform: rotate(1deg); }
         }
 
+        .site-owners { font-family: 'Bangers', cursive; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 0.2rem; transition: color 0.4s; }
         .subtitle { font-size: 1.2rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic; transition: color 0.4s; }
         .tagline  { margin-top: 0.3rem; font-size: 0.9rem; color: var(--text-dim); transition: color 0.4s; }
 
@@ -262,8 +263,8 @@
         .loaded-sample:focus { outline: none; border-color: var(--accent); }
         .loaded-sample option { background: #1a1a1a; color: #eee; }
         .preset-btn .emoji { font-size: 1.8rem; display: block; margin-bottom: 0.3rem; }
-        .preset-btn .name  { font-size: 0.95rem; color: var(--accent); transition: color 0.4s; }
-        .preset-btn .desc  { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem; transition: color 0.4s; }
+        .preset-btn .name  { font-size: 0.95rem; font-weight: 700; color: var(--accent); display: block; transition: color 0.4s; }
+        .preset-btn .desc  { font-size: 0.75rem; color: var(--text-dim); display: block; margin-top: 0.25rem; transition: color 0.4s; }
 
         /* ===== HISTORY / HOF ===== */
         .history-section { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 1.5rem; margin: 1.5rem 0; border: 2px solid var(--border); transition: border-color 0.4s; }
@@ -372,6 +373,7 @@
 <div class="deco deco-sfx" style="top:45%;left:90%;animation-delay:1.5s">💫</div>
 
 <header>
+    <p class="site-owners">Theo &amp; Jona's</p>
     <h1 id="siteTitle">The Fart Factory</h1>
     <p class="subtitle" id="siteSubtitle">Artisanal, Hand-Crafted, Small-Batch Gas Since 2026</p>
     <p class="tagline"   id="siteTagline">"Where every toot is a masterpiece" — Nobody, Ever</p>
@@ -586,9 +588,9 @@ const MODES = {
 
     sfx: {
         bodyClass: 'sfx-mode',
-        pageTitle:  'The Sound Cannon - Weaponized Audio Since 2026',
-        siteTitle:  'The Sound Cannon',
-        subtitle:   'Weaponized Audio, Deployed Since 2026',
+        pageTitle:  'Sound Canon - Premium Audio Since 2026',
+        siteTitle:  'Sound Canon',
+        subtitle:   'Premium Sound Effects, Deployed Since 2026',
         tagline:    '"Every sound effect is a power move" — Someone Confident',
         counterLabel: 'Total sounds fired:',
         btnText:    'FIRE THE<br>CANNON',
@@ -596,7 +598,7 @@ const MODES = {
         collTitle:  'Soundboard',
         hofSubtitle:'Most-fired sounds of all time',
         hofEmpty:   'Nothing fired yet. Load up and let it rip.',
-        footerLine1:'&copy; 2026 The Sound Cannon &mdash; All Rights Boomed.',
+        footerLine1:'&copy; 2026 Sound Canon &mdash; All Rights Boomed.',
         footerLine2:'Made with ⚡ and irresponsible audio decisions',
         footerLine3:'No eardrums were permanently harmed. Probably.',
         sliders: {
@@ -747,13 +749,19 @@ async function loadAllSounds() {
     btn.style.opacity = '0.4';
     btn.style.pointerEvents = 'none';
 
-    const p1 = Object.entries(FART_SOUNDS).map(([k,v]) => loadBuffer(ctx, v, fartBuffers, k));
-    const p2 = Object.entries(SFX_SOUNDS).map(([k,v]) => loadBuffer(ctx, v, sfxBuffers, k));
-    await Promise.all([...p1, ...p2]);
+    // Load current mode's sounds first so the site is playable immediately
+    const currentSounds = appMode === 'sfx' ? SFX_SOUNDS : FART_SOUNDS;
+    const currentBuffers = appMode === 'sfx' ? sfxBuffers : fartBuffers;
+    await Promise.all(Object.entries(currentSounds).map(([k,v]) => loadBuffer(ctx, v, currentBuffers, k)));
 
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'auto';
     loadPreset(MODES[appMode].presets[0].key); // default selection
+
+    // Load the other mode's sounds in the background
+    const otherSounds = appMode === 'sfx' ? FART_SOUNDS : SFX_SOUNDS;
+    const otherBuffers = appMode === 'sfx' ? fartBuffers : sfxBuffers;
+    Object.entries(otherSounds).forEach(([k,v]) => loadBuffer(ctx, v, otherBuffers, k));
 }
 
 // ---- Shared DSP ----
