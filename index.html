@@ -291,36 +291,6 @@
 
         footer a { color: #7cfc00; text-decoration: none; }
 
-        .mode-toggle {
-            display: flex;
-            justify-content: center;
-            margin: 1rem 0 0.5rem;
-        }
-
-        .mode-toggle-inner {
-            display: flex;
-            background: rgba(0,0,0,0.4);
-            border-radius: 40px;
-            border: 2px solid rgba(124, 252, 0, 0.25);
-            overflow: hidden;
-        }
-
-        .mode-btn {
-            padding: 0.5rem 1.8rem;
-            border: none;
-            background: transparent;
-            color: #8a7a5a;
-            font-family: 'Bangers', cursive;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mode-btn.active {
-            background: #7cfc00;
-            color: #1a1200;
-        }
 
         .cloud {
             position: fixed;
@@ -391,13 +361,6 @@
 
 <div class="main-container">
 
-    <div class="mode-toggle">
-        <div class="mode-toggle-inner">
-            <button class="mode-btn active" id="btnBasic" onclick="setMode('basic')">Basic</button>
-            <button class="mode-btn" id="btnAdvanced" onclick="setMode('advanced')">Advanced</button>
-        </div>
-    </div>
-
     <div class="fart-counter">
         Total farts unleashed: <span id="counter">0</span>
     </div>
@@ -411,7 +374,6 @@
     </div>
 
     <!-- CUSTOM CONTROLS -->
-    <div id="advancedPanel" style="display:none">
     <div class="controls-section">
         <h2>Fart Engineering Lab</h2>
 
@@ -469,8 +431,6 @@
             <input type="range" id="volume" min="0" max="100" step="1" value="60">
         </div>
     </div>
-    </div><!-- end advancedPanel -->
-
     <!-- PRESETS -->
     <div class="controls-section">
         <h2>Signature Collection</h2>
@@ -1329,22 +1289,11 @@ function rateFart(params) {
     return Math.min(10, Math.max(1, Math.round(score * 10) / 10));
 }
 
-// Default params used by Basic mode (no sliders)
-const basicDefaults = { duration: 0.5, pitch: 120, wetness: 0.2, reverb: 0.4, flappiness: 12, volume: 0.6 };
-
-let currentMode = 'basic';
-
 // ======== MAIN FUNCTION ========
 function unleashTheFart() {
-    let dur;
-    if (currentMode === 'basic') {
-        dur = synthesizeFart(basicDefaults);
-        afterFart(dur, basicDefaults);
-    } else {
-        const params = getParams();
-        dur = synthCustom(params);
-        afterFart(dur, params);
-    }
+    const params = getParams();
+    const dur = synthesizeFart(params);
+    afterFart(dur, params);
 }
 
 function afterFart(dur, params) {
@@ -1371,14 +1320,10 @@ function afterFart(dur, params) {
 
 // ======== PRESETS ========
 function loadPreset(name) {
-    let dur;
-    if (currentMode === 'basic') {
-        const p = basicPresets[name] || basicDefaults;
-        dur = synthesizeFart(p);
+    const p = basicPresets[name];
+    if (p) {
+        const dur = synthesizeFart(p);
         afterFart(dur, p);
-    } else {
-        dur = playPreset(name);
-        afterFart(dur, null);
     }
 }
 
@@ -1413,14 +1358,6 @@ function updateLabels() {
     document.getElementById('volumeVal').textContent = volLabels[vi];
 }
 
-// ======== MODE TOGGLE ========
-function setMode(mode) {
-    currentMode = mode;
-    const isAdvanced = mode === 'advanced';
-    document.getElementById('advancedPanel').style.display = isAdvanced ? 'block' : 'none';
-    document.getElementById('btnBasic').classList.toggle('active', !isAdvanced);
-    document.getElementById('btnAdvanced').classList.toggle('active', isAdvanced);
-}
 
 ['duration','pitch','wetness','reverb','flappiness','volume'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateLabels);
