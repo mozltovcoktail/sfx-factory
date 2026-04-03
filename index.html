@@ -707,6 +707,11 @@ function getParams() {
 const fartBuffers = {};
 const sfxBuffers  = {};
 
+// Raw ArrayBuffers fetched before any AudioContext exists (mobile-safe)
+const fartRaw = {};
+const sfxRaw  = {};
+let decodePromise = null; // resolves once buffers are decoded into current ctx
+
 const FART_SOUNDS = {
     squeaky:       'sfx/squeaky.mp3',
     juicy:         'sfx/juicy.mp3',
@@ -735,33 +740,51 @@ const SFX_SOUNDS = {
     'record-scratch': 'sfx-cool/record-scratch.mp3',
 };
 
-async function loadBuffer(ctx, path, store, key) {
+async function fetchRaw(path, store, key) {
     try {
         const res = await fetch(path);
-        const ab  = await res.arrayBuffer();
-        store[key] = await ctx.decodeAudioData(ab);
-    } catch(e) { console.warn('Failed:', path, e); }
+        store[key] = await res.arrayBuffer();
+    } catch(e) { console.warn('Failed to fetch:', path, e); }
+}
+
+// Decode all fetched raw buffers into the current AudioContext.
+// Must be called after audioCtx is created within a user gesture.
+async function decodeAllRaw() {
+    if (decodePromise) return decodePromise;
+    decodePromise = (async () => {
+        const ctx = audioCtx;
+        await Promise.all([
+            ...Object.entries(sfxRaw).map(async ([k, ab]) => {
+                try { sfxBuffers[k] = await ctx.decodeAudioData(ab.slice(0)); } catch(e) { console.warn('Decode fail sfx', k, e); }
+            }),
+            ...Object.entries(fartRaw).map(async ([k, ab]) => {
+                try { fartBuffers[k] = await ctx.decodeAudioData(ab.slice(0)); } catch(e) { console.warn('Decode fail fart', k, e); }
+            }),
+        ]);
+        // Set active buffer now that decoding is done
+        const firstKey = MODES[appMode].presets[0].key;
+        loadPreset(firstKey);
+    })();
+    return decodePromise;
 }
 
 async function loadAllSounds() {
-    const ctx = getAudioCtx();
     const btn = document.getElementById('fartBtn');
     btn.style.opacity = '0.4';
     btn.style.pointerEvents = 'none';
 
-    // Load current mode's sounds first so the site is playable immediately
+    // Fetch current mode's audio as raw bytes — no AudioContext created yet (mobile-safe)
+    const currentRaw   = appMode === 'sfx' ? sfxRaw : fartRaw;
     const currentSounds = appMode === 'sfx' ? SFX_SOUNDS : FART_SOUNDS;
-    const currentBuffers = appMode === 'sfx' ? sfxBuffers : fartBuffers;
-    await Promise.all(Object.entries(currentSounds).map(([k,v]) => loadBuffer(ctx, v, currentBuffers, k)));
+    await Promise.all(Object.entries(currentSounds).map(([k,v]) => fetchRaw(v, currentRaw, k)));
 
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'auto';
-    loadPreset(MODES[appMode].presets[0].key); // default selection
 
-    // Load the other mode's sounds in the background
+    // Fetch the other mode's sounds in the background (still no AudioContext)
+    const otherRaw   = appMode === 'sfx' ? fartRaw : sfxRaw;
     const otherSounds = appMode === 'sfx' ? FART_SOUNDS : SFX_SOUNDS;
-    const otherBuffers = appMode === 'sfx' ? fartBuffers : sfxBuffers;
-    Object.entries(otherSounds).forEach(([k,v]) => loadBuffer(ctx, v, otherBuffers, k));
+    Object.entries(otherSounds).forEach(([k,v]) => fetchRaw(v, otherRaw, k));
 }
 
 // ---- Shared DSP ----
@@ -1096,6 +1119,7 @@ function recordPlay(presetKey) {
 async function playDirect(key) {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state !== 'running') await audioCtx.resume();
+    await decodeAllRaw(); // no-op after first call
     const dur = appMode === 'fart' ? playFartPreset(key) : playSfxPreset(key);
 
     const btn = document.getElementById('fartBtn');
@@ -1141,8 +1165,10 @@ function loadPreset(key) {
 // MAIN PLAY FUNCTIONS
 // ========================================================
 async function unleashSound() {
+    // Create AudioContext inside the gesture — required for iOS reliability
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state !== 'running') await audioCtx.resume();
+    await decodeAllRaw(); // no-op after first call
     const params = getParams();
     let dur;
     let key = activePresetKey || 'custom';
