@@ -478,8 +478,8 @@
 
 <footer>
     <div class="mode-switcher">
-        <button class="mode-switcher-btn active" id="btnFartMode" onclick="setAppMode('fart')">💨 Fart Mode</button>
-        <button class="mode-switcher-btn"        id="btnSfxMode"  onclick="setAppMode('sfx')">🔊 SFX Mode</button>
+        <button class="mode-switcher-btn active" id="btnSfxMode"  onclick="setAppMode('sfx')">🔊 SFX Mode</button>
+        <button class="mode-switcher-btn"        id="btnFartMode" onclick="setAppMode('fart')">💨 Fart Mode</button>
     </div>
     <p id="footerLine1" style="margin-top:1.5rem;">&copy; 2026 The Fart Factory &mdash; All Toots Reserved.</p>
     <p style="margin-top:0.5rem;" id="footerLine2">Made with 💨 and questionable life choices</p>
@@ -728,7 +728,7 @@ async function loadAllSounds() {
 
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'auto';
-    loadPreset('squeaker'); // default selection
+    loadPreset(MODES[appMode].presets[0].key); // default selection
 }
 
 // ---- Shared DSP ----
@@ -1250,8 +1250,10 @@ async function downloadSite() {
     try {
         const zip = new JSZip();
 
-        // Main HTML
-        zip.file('index.html', document.documentElement.outerHTML);
+        // Main HTML — fetch latest committed version from GitHub
+        const htmlRes = await fetch('https://raw.githubusercontent.com/mozltovcoktail/sfx-factory/main/index.html');
+        const htmlSrc = await htmlRes.text();
+        zip.file('index.html', htmlSrc);
 
         // Fetch and add all audio files
         const allFiles = [
@@ -1336,7 +1338,7 @@ Key sections: AUDIO ENGINE, MODE DATA, HALL OF FAME, PARTICLES, DOWNLOAD.
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
         a.href     = url;
-        a.download = 'funny-sounds.zip';
+        a.download = 'sfx-factory.zip';
         a.click();
         URL.revokeObjectURL(url);
 
@@ -1353,7 +1355,7 @@ Key sections: AUDIO ENGINE, MODE DATA, HALL OF FAME, PARTICLES, DOWNLOAD.
 // INIT
 // ========================================================
 buildPresetLabelMap();
-setAppMode('fart');          // render initial state
+setAppMode('sfx');           // render initial state
 
 document.addEventListener('DOMContentLoaded', loadAllSounds);
 
