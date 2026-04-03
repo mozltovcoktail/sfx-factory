@@ -357,7 +357,7 @@
         body:not(.sfx-mode) .deco-sfx { display: none; }
     </style>
 </head>
-<body>
+<body class="sfx-mode">
 
 <!-- Fart decorations -->
 <div class="deco deco-fart" style="top:10%;left:5%">~</div>
@@ -682,7 +682,7 @@ const MODES = {
 // AUDIO ENGINE
 // ========================================================
 let audioCtx = null;
-let appMode  = 'fart';
+let appMode  = 'sfx';
 let playCount = 0;
 const hallOfFame = { fart: {}, sfx: {} };
 
@@ -1093,7 +1093,9 @@ function recordPlay(presetKey) {
 // ========================================================
 // SOUNDBOARD — play preset directly without touching sliders
 // ========================================================
-function playDirect(key) {
+async function playDirect(key) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state !== 'running') await audioCtx.resume();
     const dur = appMode === 'fart' ? playFartPreset(key) : playSfxPreset(key);
 
     const btn = document.getElementById('fartBtn');
@@ -1138,7 +1140,9 @@ function loadPreset(key) {
 // ========================================================
 // MAIN PLAY FUNCTIONS
 // ========================================================
-function unleashSound() {
+async function unleashSound() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state !== 'running') await audioCtx.resume();
     const params = getParams();
     let dur;
     let key = activePresetKey || 'custom';
