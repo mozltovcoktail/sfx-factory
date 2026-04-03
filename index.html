@@ -493,7 +493,8 @@
             Applause by <a href="https://freesound.org/people/leo153/">leo153</a> &bull;
             Cash Register by <a href="https://freesound.org/people/CapsLok/">CapsLok</a> &bull;
             Explosion by <a href="https://freesound.org/people/SpliceSound/">SpliceSound</a> &bull;
-            Laser by <a href="https://freesound.org/people/ledhed2222/">ledhed2222</a> &bull;
+            Laser (blaster) by <a href="https://freesound.org/people/BloodPixelHero/">BloodPixelHero</a> &bull;
+            Laser (zap) by <a href="https://freesound.org/people/belanhud/">belanhud</a> &bull;
             Fanfare by <a href="https://freesound.org/people/jimhancock/">jimhancock</a>
             &mdash; all via <a href="https://freesound.org">Freesound.org</a> / <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>
         </p>
@@ -701,6 +702,7 @@ const FART_SOUNDS = {
 const SFX_SOUNDS = {
     'car-horn':      'sfx-cool/car-horn.mp3',
     laser:           'sfx-cool/laser.mp3',
+    'raygun-zap':    'sfx-cool/raygun-zap.mp3',
     applause:        'sfx-cool/applause.mp3',
     'cash-register': 'sfx-cool/cash-register.mp3',
     explosion:       'sfx-cool/explosion.mp3',
@@ -883,13 +885,13 @@ function playFartPreset(key) {
 // ---- SFX preset map ----
 const sfxPresetDefs = {
     car_horn:      { buf:'car-horn',      duration:0.8,  pitch:110, wetness:0.10, reverb:0.25, flappiness:2,  volume:0.85 },
-    laser:         { buf:'laser',         duration:1.0,  pitch:130, wetness:0.05, reverb:0.20, flappiness:8,  volume:0.80 },
+    laser:         { buf:'laser',         duration:1.0,  pitch:110, wetness:0.05, reverb:0.25, flappiness:4,  volume:0.85 },
     applause:      { buf:'applause',      duration:2.5,  pitch:100, wetness:0.05, reverb:0.50, flappiness:2,  volume:0.80 },
     cash_register: { buf:'cash-register', duration:0.5,  pitch:120, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
     explosion:     { buf:'explosion',     duration:1.5,  pitch:80,  wetness:0.20, reverb:0.60, flappiness:3,  volume:0.90 },
     zipper:        { buf:'zipper',        duration:0.6,  pitch:140, wetness:0.10, reverb:0.10, flappiness:15, volume:0.80 },
     fanfare:       { buf:'fanfare',       duration:2.0,  pitch:110, wetness:0.05, reverb:0.40, flappiness:2,  volume:0.85 },
-    laser_fast:    { buf:'laser',         duration:0.3,  pitch:180, wetness:0.08, reverb:0.10, flappiness:30, volume:0.75 },
+    laser_fast:    { buf:'raygun-zap',    duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
     car_horn_long: { buf:'car-horn',      duration:3.0,  pitch:90,  wetness:0.05, reverb:0.30, flappiness:2,  volume:0.90 },
     applause_slow: { buf:'applause',      duration:4.0,  pitch:80,  wetness:0.05, reverb:0.65, flappiness:1,  volume:0.70 },
     explosion_big: { buf:'explosion',     duration:3.5,  pitch:55,  wetness:0.40, reverb:0.90, flappiness:5,  volume:1.00 },
