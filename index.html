@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title id="pageTitle">The Fart Factory - Artisanal Gas Since 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -141,6 +141,8 @@
         .main-container { max-width: 900px; margin: 0 auto; padding: 1rem; position: relative; z-index: 1; }
 
         /* ===== BIG BUTTON ===== */
+        button { touch-action: manipulation; } /* prevent double-tap zoom on all buttons */
+
         .big-fart-btn {
             display: block;
             margin: 1.5rem auto;
@@ -710,7 +712,40 @@ const sfxBuffers  = {};
 // Raw ArrayBuffers fetched before any AudioContext exists (mobile-safe)
 const fartRaw = {};
 const sfxRaw  = {};
-let decodePromise = null; // resolves once buffers are decoded into current ctx
+const decodedKeys = new Set(); // tracks which raw keys have been decoded into buffers
+
+async function decodeRawIfNeeded(rawStore, bufStore) {
+    const ctx = audioCtx;
+    await Promise.all(
+        Object.entries(rawStore)
+            .filter(([k]) => !decodedKeys.has(k))
+            .map(async ([k, ab]) => {
+                try {
+                    bufStore[k] = await ctx.decodeAudioData(ab.slice(0));
+                    decodedKeys.add(k);
+                } catch(e) { console.warn('Decode fail:', k, e); }
+            })
+    );
+}
+
+// Single entry point for all audio setup — call at the top of every gesture handler.
+// Creates AudioContext inside the gesture (iOS requirement), resumes it, then decodes
+// any raw buffers that have been fetched since the last call.
+async function ensureAudioReady() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state !== 'running') await audioCtx.resume();
+
+    const hasNew = Object.keys(sfxRaw).some(k => !decodedKeys.has(k)) ||
+                   Object.keys(fartRaw).some(k => !decodedKeys.has(k));
+    if (hasNew) {
+        await Promise.all([
+            decodeRawIfNeeded(sfxRaw, sfxBuffers),
+            decodeRawIfNeeded(fartRaw, fartBuffers),
+        ]);
+        // Refresh activeBuffer — it may have been null before decoding finished
+        if (!activeBuffer) loadPreset(activePresetKey || MODES[appMode].presets[0].key);
+    }
+}
 
 const FART_SOUNDS = {
     squeaky:       'sfx/squeaky.mp3',
@@ -747,26 +782,6 @@ async function fetchRaw(path, store, key) {
     } catch(e) { console.warn('Failed to fetch:', path, e); }
 }
 
-// Decode all fetched raw buffers into the current AudioContext.
-// Must be called after audioCtx is created within a user gesture.
-async function decodeAllRaw() {
-    if (decodePromise) return decodePromise;
-    decodePromise = (async () => {
-        const ctx = audioCtx;
-        await Promise.all([
-            ...Object.entries(sfxRaw).map(async ([k, ab]) => {
-                try { sfxBuffers[k] = await ctx.decodeAudioData(ab.slice(0)); } catch(e) { console.warn('Decode fail sfx', k, e); }
-            }),
-            ...Object.entries(fartRaw).map(async ([k, ab]) => {
-                try { fartBuffers[k] = await ctx.decodeAudioData(ab.slice(0)); } catch(e) { console.warn('Decode fail fart', k, e); }
-            }),
-        ]);
-        // Set active buffer now that decoding is done
-        const firstKey = MODES[appMode].presets[0].key;
-        loadPreset(firstKey);
-    })();
-    return decodePromise;
-}
 
 async function loadAllSounds() {
     const btn = document.getElementById('fartBtn');
@@ -1117,9 +1132,7 @@ function recordPlay(presetKey) {
 // SOUNDBOARD — play preset directly without touching sliders
 // ========================================================
 async function playDirect(key) {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state !== 'running') await audioCtx.resume();
-    await decodeAllRaw(); // no-op after first call
+    await ensureAudioReady();
     const dur = appMode === 'fart' ? playFartPreset(key) : playSfxPreset(key);
 
     const btn = document.getElementById('fartBtn');
@@ -1165,10 +1178,7 @@ function loadPreset(key) {
 // MAIN PLAY FUNCTIONS
 // ========================================================
 async function unleashSound() {
-    // Create AudioContext inside the gesture — required for iOS reliability
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state !== 'running') await audioCtx.resume();
-    await decodeAllRaw(); // no-op after first call
+    await ensureAudioReady();
     const params = getParams();
     let dur;
     let key = activePresetKey || 'custom';
