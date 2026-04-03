@@ -1340,70 +1340,124 @@ async function downloadSite() {
             zip.file('wrangler.toml', await wranglerRes.text());
         } catch(e) { console.warn('Could not add wrangler.toml'); }
 
+        // Serve script for local dev
+        const serveScript = `import http.server, os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+http.server.test(HandlerClass=http.server.SimpleHTTPRequestHandler, port=3001, bind="")
+`;
+        zip.file('serve.py', serveScript);
+
         // README — structured for AI editing
-        const fartFiles = Object.values(FART_SOUNDS).map(v=>`  ${v}`).join('\n');
-        const sfxFiles  = Object.values(SFX_SOUNDS).map(v=>`  ${v}`).join('\n');
-        const readme = `# SFX Factory — The Fart Factory & Sound Cannon
+        const fartFiles = Object.entries(FART_SOUNDS).map(([k,v])=>`  ${v}  (key: "${k}")`).join('\n');
+        const sfxFiles  = Object.entries(SFX_SOUNDS).map(([k,v])=>`  ${v}  (key: "${k}")`).join('\n');
+        const fartPresets = Object.entries(fartPresetDefs).map(([k,v])=>`  ${k}: buf="${v.buf}" duration=${v.duration}s pitch=${v.pitch} wetness=${v.wetness} reverb=${v.reverb} flappiness=${v.flappiness} volume=${v.volume}`).join('\n');
+        const sfxPresets  = Object.entries(sfxPresetDefs).map(([k,v])=>`  ${k}: buf="${v.buf}" duration=${v.duration}s pitch=${v.pitch} wetness=${v.wetness} reverb=${v.reverb} flappiness=${v.flappiness} volume=${v.volume}`).join('\n');
+        const readme = `# Theo & Jona's SFX Factory
 
-## Overview
-
-A dual-mode interactive sound effects website. **Entirely self-contained** — one \`index.html\` file plus audio sample folders. No build step, no dependencies beyond a CDN-loaded JSZip for the download feature.
-
-- **SFX Mode** 🔊 — Sound effects soundboard (default)
-- **Fart Mode** 💨 — Artisanal fart sounds
+A dual-mode interactive sound effects website made for Theo & Jona.
+Entirely self-contained — one \`index.html\` file plus audio sample folders.
+No build step. No framework. No dependencies except a CDN JSZip for the download feature.
 
 ## Running locally
 
+Audio requires a server (browsers block Web Audio on file:// URLs).
+
 \`\`\`bash
-# Any static file server works — audio requires a server (not file://)
-python3 -m http.server 3001
+python3 serve.py
 # then open http://localhost:3001
 \`\`\`
 
-## Deploying
+Or any other static server (npx serve, ruby -run -e httpd, etc).
 
-Cloudflare Pages: connect the GitHub repo (mozltovcoktail/sfx-factory), leave build command and output directory blank. The \`wrangler.toml\` handles config.
+## Deploying to Cloudflare Pages
+
+Connect the GitHub repo, leave build command and output directory blank.
+\`wrangler.toml\` is already configured.
 
 ## File structure
 
 \`\`\`
 index.html          # ENTIRE app — all HTML, CSS, JS in one file
-wrangler.toml       # Cloudflare Pages config
-sfx/                # Fart mode audio samples (CC0)
+serve.py            # Local dev server (Python 3)
+wrangler.toml       # Cloudflare Pages deployment config
+sfx/                # Fart mode audio samples (CC0, from Freesound)
 ${fartFiles}
-sfx-cool/           # SFX mode audio samples (CC0)
+sfx-cool/           # SFX mode audio samples (CC0, from Freesound)
 ${sfxFiles}
 \`\`\`
 
-## Architecture (for AI editing)
+## Architecture
 
-All code lives in \`index.html\`. Key sections inside the \`<script>\` tag:
+Everything is in \`index.html\`. Sections in the \`<script>\` tag:
 
-- **THEME VARIABLES** — CSS custom properties for dual-mode theming (fart=green, sfx=cyan)
-- **MODES object** — all mode-specific content: presets, labels, reviews, slider configs, particle maps
-- **AUDIO ENGINE** — \`playSampleBuffer()\` (granular time-stretch), \`makeDistortion()\`, \`makeReverb()\`
-- **FART_SOUNDS / SFX_SOUNDS** — maps buffer keys to file paths
-- **fartPresetDefs / sfxPresetDefs** — preset parameters {buf, duration, pitch, wetness, reverb, flappiness, volume}
-- **playDirect(key)** — plays a preset immediately (soundboard buttons)
-- **loadPreset(key)** — loads preset params into sliders (dropdown)
-- **unleashSound()** — plays using current slider state + active buffer (big button)
-- **setAppMode(mode)** — switches theme, populates all dynamic DOM
-- **HALL OF FAME** — play count tracking per preset key, persisted in memory
-- **PARTICLES** — emoji floaters + optional stomper emoji crossing screen
-- **DOWNLOAD** — JSZip packages this zip from GitHub raw + local audio files
+### Data
+- **MODES** — all mode-specific content (presets array, labels, reviews, slider configs, particle/stomper maps)
+- **FART_SOUNDS / SFX_SOUNDS** — maps buffer key → file path
+- **fartPresetDefs / sfxPresetDefs** — preset parameters: buf, duration, pitch, wetness, reverb, flappiness, volume
 
-## Adding a new sound
+### Audio engine
+- **loadBuffer(ctx, path, store, key)** — fetches + decodes an MP3 into a Web Audio buffer
+- **loadAllSounds()** — loads current mode first (so site is playable immediately), then background-loads the other
+- **playSampleBuffer(buffer, params)** — plays a buffer with granular time-stretch, distortion, tremolo LFO, reverb
+- **makeDistortion(ctx, amount)** — WaveShaper distortion node
+- **makeReverb(ctx, secs)** — convolution reverb with synthetic impulse response
 
-1. Add the MP3 to \`sfx/\` or \`sfx-cool/\`
-2. Add an entry to \`FART_SOUNDS\` or \`SFX_SOUNDS\`
+### Playback
+- **playDirect(key)** — plays a preset immediately using preset's own params (soundboard buttons)
+- **loadPreset(key)** — loads preset params into sliders + sets active buffer (dropdown)
+- **unleashSound()** — plays using current slider values against the active buffer (big button / spacebar)
+- **playFartPreset(key)** — fart preset dispatcher (handles machine_gun, morse multi-shot patterns)
+- **playSfxPreset(key)** — SFX preset dispatcher (handles laser_fast burst, slide_whistle pitch ramp, pizza_moon chaos)
+
+### UI
+- **setAppMode(mode)** — switches CSS theme, rebuilds all dynamic DOM (presets grid, dropdown, reviews, labels)
+- **updateLabels()** — refreshes slider value display text
+- **spawnParticles(presetKey)** — emoji floaters, color clouds (fart mode), giant stomper emoji crossing screen
+- **startVisualizer(dur)** — animates the canvas frequency visualizer
+- **downloadSite()** — packages entire site as sfx-factory.zip via JSZip
+
+### CSS
+- Dual theme via CSS custom properties (--accent, --bg1, --bg2, etc.)
+- \`body\` = fart mode (green), \`body.sfx-mode\` = SFX mode (cyan)
+- All transition: 0.4s for smooth mode switching
+
+## Current preset definitions
+
+### Fart mode
+${fartPresets}
+
+### SFX mode
+${sfxPresets}
+
+## How to add a new sound
+
+1. Add the MP3 to \`sfx/\` (fart) or \`sfx-cool/\` (SFX)
+2. Add to \`FART_SOUNDS\` or \`SFX_SOUNDS\`: \`key: 'path/to/file.mp3'\`
 3. Add a preset def to \`fartPresetDefs\` or \`sfxPresetDefs\`
-4. Add the preset to the \`MODES.fart.presets\` or \`MODES.sfx.presets\` array
-5. Update attribution in the footer HTML
+4. Add to the \`MODES.fart.presets\` or \`MODES.sfx.presets\` array: \`{ key, emoji, name, desc }\`
+5. Optionally add particle emoji to the particles map and a stomper emoji to the stomper map in MODES
+6. Update the attribution \`<p>\` in the footer HTML
 
-## Sound Credits (all CC0 — no attribution required)
+## Sound Credits (all CC0 — no attribution required, but we credit anyway)
 
 **Fart sounds:** "Juicy Fart" series by Zott820 via freesound.org
-**SFX sounds:** Car Horn by DeVern · Zipper by Sadiquecat · Applause by leo153 · Cash Register by CapsLok · Explosion by SpliceSound · Laser (blaster) by BloodPixelHero · Laser (zap) by belanhud · Fanfare by jimhancock — all via freesound.org / CC0
+
+**SFX sounds (all via freesound.org / CC0):**
+- Car Horn: DeVern
+- Laser (blaster): BloodPixelHero
+- Laser (zap): belanhud
+- Wilhelm Scream: qubodup
+- Cash Register: CapsLok
+- Explosion: florianreichelt
+- Sad Trombone: kirbydx
+- Fanfare: Wagna
+- Airhorn: FunWithSound
+- Record Scratch: LiftPizzas
+- Boing: magnuswaker
+- Slide Whistle: SamuelGremaud
+- Applause: Department64
+- Nuke: qubodup
+- Zipper: Sadiquecat
 `;
         zip.file('README.md', readme);
 
