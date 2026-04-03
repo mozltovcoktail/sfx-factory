@@ -383,7 +383,7 @@
                 <span class="value" id="durationVal">0.5s</span>
             </div>
             <div class="slider-description">How long can you hold it?</div>
-            <input type="range" id="duration" min="0.1" max="3" step="0.1" value="0.5">
+            <input type="range" id="duration" min="0.1" max="12" step="0.1" value="0.5">
         </div>
 
         <div class="slider-group">
@@ -441,7 +441,7 @@
                 <span class="desc">Quick & high-pitched</span>
             </button>
             <button class="preset-btn" onclick="loadPreset('thunderclap')">
-                <span class="emoji">thunder</span>
+                <span class="emoji">⚡</span>
                 <span class="name">Thunderclap</span>
                 <span class="desc">Low, long & proud</span>
             </button>
@@ -498,9 +498,10 @@
         </div>
     </div>
 
-    <!-- FART LOG -->
+    <!-- HALL OF FAME -->
     <div class="history-section">
-        <h2>The Fart Chronicle</h2>
+        <h2>Hall of Fame</h2>
+        <p style="text-align:center;color:#8a7a5a;font-size:0.85rem;margin-bottom:1rem;font-style:italic;">Most-played farts of all time</p>
         <div id="fart-log">
             <p style="color:#8a7a5a;text-align:center;font-style:italic;">No farts recorded yet. History awaits your contribution.</p>
         </div>
@@ -1192,13 +1193,19 @@ function playSample(buffer, params) {
 
     // playbackRate: pitch slider 40-300 maps to rate 0.4-2.5
     const rate = Math.pow(pitch / 120, 1.4);
-    // actual sound duration accounts for playback rate
-    const soundDur = Math.min(duration, buffer.duration / rate);
+    const nativeDur = buffer.duration / rate;
+    // If duration > native length, loop the sample
+    const soundDur = duration;
 
     // ---- Source ----
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.playbackRate.value = rate;
+    if (duration > nativeDur) {
+        src.loop = true;
+        src.loopStart = 0;
+        src.loopEnd = buffer.duration;
+    }
 
     // ---- Wetness → distortion/saturation ----
     const dist = makeDistortion(ctx, wetness * 80);
@@ -1367,14 +1374,46 @@ function rateFart(params) {
     return Math.min(10, Math.max(1, Math.round(score * 10) / 10));
 }
 
+// ======== HALL OF FAME ========
+const hallOfFame = {}; // { label: count }
+
+const presetLabels = {
+    squeaker:    '🐭 The Squeaker',
+    thunderclap: '⚡ Thunderclap',
+    machine_gun: '💥 Machine Gun',
+    whoopee:     '🎪 Whoopee Cushion',
+    deflating:   '🎈 Deflating Balloon',
+    tuba:        '🎺 The Tuba',
+    ripper:      '🔥 The Ripper',
+    stealth:     '🥷 Silent But Deadly',
+    cathedral:   '⛪ Cathedral Echo',
+    duck:        '🦆 Sitting Duck',
+    volcano:     '🌋 Mount Vesuvius',
+    morse:       '📡 Morse Code',
+    custom:      '🎛️ Custom',
+};
+
+const medals = ['🥇','🥈','🥉'];
+
+function renderHallOfFame() {
+    const log = document.getElementById('fart-log');
+    const sorted = Object.entries(hallOfFame).sort((a, b) => b[1] - a[1]);
+    if (sorted.length === 0) return;
+    log.innerHTML = sorted.map(([label, count], i) => `
+        <div class="log-entry">
+            <span>${medals[i] || '💨'} ${label}</span>
+            <span class="rating">${count} toot${count !== 1 ? 's' : ''}</span>
+        </div>`).join('');
+}
+
 // ======== MAIN FUNCTION ========
 function unleashTheFart() {
     const params = getParams();
     const dur = synthesizeFart(params);
-    afterFart(dur, params);
+    afterFart(dur, 'custom');
 }
 
-function afterFart(dur, params) {
+function afterFart(dur, presetKey) {
     const btn = document.getElementById('fartBtn');
     btn.classList.add('farting');
     setTimeout(() => btn.classList.remove('farting'), 400);
@@ -1385,27 +1424,22 @@ function afterFart(dur, params) {
     fartCount++;
     document.getElementById('counter').textContent = fartCount;
 
-    const name = generateFartName();
-    const rating = rateFart(params || getParams());
-    const log = document.getElementById('fart-log');
-    if (fartCount === 1) log.innerHTML = '';
-
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.innerHTML = `<span>#${fartCount} "${name}"</span><span class="rating">${rating}/10</span>`;
-    log.prepend(entry);
+    const label = presetLabels[presetKey] || presetLabels.custom;
+    hallOfFame[label] = (hallOfFame[label] || 0) + 1;
+    renderHallOfFame();
 }
 
 // ======== PRESETS ========
 function loadPreset(name) {
     const dur = playPreset(name);
-    afterFart(dur, presetDefs[name] || getParams());
+    afterFart(dur, name);
 }
 
 // ======== SLIDER LABEL UPDATES ========
 function updateLabels() {
     const dur = parseFloat(document.getElementById('duration').value);
-    document.getElementById('durationVal').textContent = dur.toFixed(1) + 's';
+    const durLabel = dur >= 10 ? 'The Long Haul' : dur >= 6 ? 'Evacuation Required' : dur >= 3 ? 'Lingering' : dur >= 1.5 ? 'Sustained' : 'Brief';
+    document.getElementById('durationVal').textContent = `${dur.toFixed(1)}s — ${durLabel}`;
 
     const pitch = parseFloat(document.getElementById('pitch').value);
     const pitchLabels = ['Subterranean', 'Bass', 'Low', 'Medium', 'High', 'Dog Whistle'];
