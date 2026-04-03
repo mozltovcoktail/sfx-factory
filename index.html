@@ -1270,68 +1270,76 @@ async function downloadSite() {
             } catch(e) { console.warn('Could not add', path); }
         }));
 
-        // README
-        const readme = `# Funny Sounds — The Fart Factory & Sound Cannon
+        // Also fetch wrangler.toml for deployment
+        try {
+            const wranglerRes = await fetch('https://raw.githubusercontent.com/mozltovcoktail/sfx-factory/main/wrangler.toml');
+            zip.file('wrangler.toml', await wranglerRes.text());
+        } catch(e) { console.warn('Could not add wrangler.toml'); }
 
-## What is this?
+        // README — structured for AI editing
+        const fartFiles = Object.values(FART_SOUNDS).map(v=>`  ${v}`).join('\n');
+        const sfxFiles  = Object.values(SFX_SOUNDS).map(v=>`  ${v}`).join('\n');
+        const readme = `# SFX Factory — The Fart Factory & Sound Cannon
 
-A dual-mode interactive sound effects website built entirely in one HTML file.
+## Overview
 
-- **Fart Mode** 💨 — Artisanal fart sounds with customizable engineering lab
-- **SFX Mode** 🔊 — Car horns, lasers, applause, explosions, and more
+A dual-mode interactive sound effects website. **Entirely self-contained** — one \`index.html\` file plus audio sample folders. No build step, no dependencies beyond a CDN-loaded JSZip for the download feature.
 
-## How to run locally
+- **SFX Mode** 🔊 — Sound effects soundboard (default)
+- **Fart Mode** 💨 — Artisanal fart sounds
 
-Simply open \`index.html\` in any modern browser. No server required.
+## Running locally
 
 \`\`\`bash
-open index.html        # macOS
-start index.html       # Windows
-xdg-open index.html    # Linux
+# Any static file server works — audio requires a server (not file://)
+python3 -m http.server 3001
+# then open http://localhost:3001
 \`\`\`
 
-## Project structure
+## Deploying
+
+Cloudflare Pages: connect the GitHub repo (mozltovcoktail/sfx-factory), leave build command and output directory blank. The \`wrangler.toml\` handles config.
+
+## File structure
 
 \`\`\`
-index.html          # Entire app — HTML, CSS, and JS in one file
-sfx/                # Fart sound samples (CC0)
-  squeaky.mp3
-  juicy.mp3
-  long-wet.mp3
-  long-rumbly.mp3
-  quick-wet.mp3
-  medium-wet.mp3
-  big-wet.mp3
-sfx-cool/           # SFX sound samples (CC0)
-  car-horn.mp3
-  laser.mp3
-  applause.mp3
-  cash-register.mp3
-  explosion.mp3
-  zipper.mp3
-  fanfare.mp3
+index.html          # ENTIRE app — all HTML, CSS, JS in one file
+wrangler.toml       # Cloudflare Pages config
+sfx/                # Fart mode audio samples (CC0)
+${fartFiles}
+sfx-cool/           # SFX mode audio samples (CC0)
+${sfxFiles}
 \`\`\`
 
-## Features
+## Architecture (for AI editing)
 
-- 12 preset sounds per mode
-- 6 customizable sliders (pitch, duration, reverb, distortion, tremolo, volume)
-- Real-time audio visualizer
-- Hall of Fame tracking most-played sounds
-- Particle effects and giant screen-crossing emoji per sound
-- Fully downloadable from the site itself
+All code lives in \`index.html\`. Key sections inside the \`<script>\` tag:
 
-## Sound Credits
+- **THEME VARIABLES** — CSS custom properties for dual-mode theming (fart=green, sfx=cyan)
+- **MODES object** — all mode-specific content: presets, labels, reviews, slider configs, particle maps
+- **AUDIO ENGINE** — \`playSampleBuffer()\` (granular time-stretch), \`makeDistortion()\`, \`makeReverb()\`
+- **FART_SOUNDS / SFX_SOUNDS** — maps buffer keys to file paths
+- **fartPresetDefs / sfxPresetDefs** — preset parameters {buf, duration, pitch, wetness, reverb, flappiness, volume}
+- **playDirect(key)** — plays a preset immediately (soundboard buttons)
+- **loadPreset(key)** — loads preset params into sliders (dropdown)
+- **unleashSound()** — plays using current slider state + active buffer (big button)
+- **setAppMode(mode)** — switches theme, populates all dynamic DOM
+- **HALL OF FAME** — play count tracking per preset key, persisted in memory
+- **PARTICLES** — emoji floaters + optional stomper emoji crossing screen
+- **DOWNLOAD** — JSZip packages this zip from GitHub raw + local audio files
 
-All sounds CC0 1.0 Universal (no attribution required):
+## Adding a new sound
+
+1. Add the MP3 to \`sfx/\` or \`sfx-cool/\`
+2. Add an entry to \`FART_SOUNDS\` or \`SFX_SOUNDS\`
+3. Add a preset def to \`fartPresetDefs\` or \`sfxPresetDefs\`
+4. Add the preset to the \`MODES.fart.presets\` or \`MODES.sfx.presets\` array
+5. Update attribution in the footer HTML
+
+## Sound Credits (all CC0 — no attribution required)
 
 **Fart sounds:** "Juicy Fart" series by Zott820 via freesound.org
-**SFX sounds:** Car Horn by DeVern · Zipper by Sadiquecat · Applause by leo153 · Cash Register by CapsLok · Explosion by SpliceSound · Laser by ledhed2222 · Fanfare by jimhancock — all via freesound.org
-
-## Further development
-
-Open \`index.html\` in your IDE. All logic is in the \`<script>\` tag at the bottom.
-Key sections: AUDIO ENGINE, MODE DATA, HALL OF FAME, PARTICLES, DOWNLOAD.
+**SFX sounds:** Car Horn by DeVern · Zipper by Sadiquecat · Applause by leo153 · Cash Register by CapsLok · Explosion by SpliceSound · Laser (blaster) by BloodPixelHero · Laser (zap) by belanhud · Fanfare by jimhancock — all via freesound.org / CC0
 `;
         zip.file('README.md', readme);
 
