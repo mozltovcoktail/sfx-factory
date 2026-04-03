@@ -624,7 +624,7 @@ const MODES = {
             { key:'car_horn_long',  emoji:'🚕', name:'Endless Honk',      desc:'Maximum frustration' },
             { key:'applause_slow',  emoji:'🌟', name:'Slow Clap',         desc:'Sarcastically yours' },
             { key:'explosion_big',  emoji:'🌋', name:'Nuke',              desc:'Don\'t.' },
-            { key:'pizza_moon',     emoji:'🍕', name:'Pizza & Moon',      desc:'🍕🌕 inexplicable' },
+            { key:'pizza_moon',     emoji:'🍕', name:'Pizza & Moon',      desc:'Lasers. Giants. Pizza.' },
         ],
         hofLabel: (label, count) => `${label} (${count} shot${count!==1?'s':''})`,
         particles: (key) => {
@@ -640,7 +640,7 @@ const MODES = {
                 car_horn_long: ['🚗','😤','🚗'],
                 applause_slow: ['👏','🌟','👏'],
                 explosion_big: ['💥','🌋','💥'],
-                pizza_moon:    ['🍕','🌕','🍕'],
+                pizza_moon:    ['🍕','🌕','🍕','⚡','🔫','🌕','🍕','⚡','🍕','🌕','💫','🏆','🍕','🌕','⚡'],
             };
             return map[key] || ['✨','⚡','🎵'];
         },
@@ -652,7 +652,7 @@ const MODES = {
                 car_horn_long: '🚕',
                 laser:         '⚡',
                 laser_fast:    '⚡',
-                pizza_moon:    '🍕',
+                pizza_moon:    '🌕',
                 fanfare:       '🏆',
             };
             return map[key] || null;
@@ -892,7 +892,7 @@ const sfxPresetDefs = {
     zipper:        { buf:'zipper',        duration:0.6,  pitch:140, wetness:0.10, reverb:0.10, flappiness:15, volume:0.80 },
     fanfare:       { buf:'fanfare',       duration:2.0,  pitch:110, wetness:0.05, reverb:0.40, flappiness:2,  volume:0.85 },
     laser_fast:    { buf:'raygun-zap',    duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
-    car_horn_long: { buf:'car-horn',      duration:3.0,  pitch:90,  wetness:0.05, reverb:0.30, flappiness:2,  volume:0.90 },
+    car_horn_long: { buf:'car-horn',      duration:12.0, pitch:90,  wetness:0.05, reverb:0.30, flappiness:2,  volume:0.90 },
     applause_slow: { buf:'applause',      duration:4.0,  pitch:80,  wetness:0.05, reverb:0.65, flappiness:1,  volume:0.70 },
     explosion_big: { buf:'explosion',     duration:3.5,  pitch:55,  wetness:0.40, reverb:0.90, flappiness:5,  volume:1.00 },
     pizza_moon:    { buf:'fanfare',       duration:1.5,  pitch:160, wetness:0.30, reverb:0.80, flappiness:20, volume:0.75 },
@@ -906,6 +906,16 @@ function playSfxPreset(key) {
         const shots=5, gap=0.25;
         for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(buf,def), i*gap*1000);
         return shots * gap;
+    }
+    if (key === 'pizza_moon') {
+        // CHAOS: fanfare + crowd roar + laser barrage all at once
+        playSampleBuffer(sfxBuffers['fanfare'],   {duration:3.0, pitch:130, wetness:0.05, reverb:0.50, flappiness:2,  volume:0.90});
+        playSampleBuffer(sfxBuffers['applause'],  {duration:3.5, pitch:95,  wetness:0.05, reverb:0.70, flappiness:1,  volume:0.85});
+        const laserDef = {duration:0.4, pitch:140, wetness:0.05, reverb:0.20, flappiness:2, volume:0.75};
+        const laserBuf = sfxBuffers['raygun-zap'] || sfxBuffers['laser'];
+        const shots=8, gap=0.18;
+        for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(laserBuf, laserDef), i*gap*1000);
+        return 3.5;
     }
     return playSampleBuffer(buf, def);
 }
