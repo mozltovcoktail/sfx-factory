@@ -728,6 +728,7 @@ async function loadAllSounds() {
 
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'auto';
+    loadPreset('squeaker'); // default selection
 }
 
 // ---- Shared DSP ----
@@ -1024,6 +1025,24 @@ function recordPlay(presetKey) {
 }
 
 // ========================================================
+// SOUNDBOARD — play preset directly without touching sliders
+// ========================================================
+function playDirect(key) {
+    const dur = appMode === 'fart' ? playFartPreset(key) : playSfxPreset(key);
+
+    const btn = document.getElementById('fartBtn');
+    btn.classList.add('firing');
+    setTimeout(()=>btn.classList.remove('firing'), 400);
+
+    spawnParticles(key);
+    startVisualizer(dur);
+
+    playCount++;
+    document.getElementById('counter').textContent = playCount;
+    recordPlay(key);
+}
+
+// ========================================================
 // PRESET LOADING
 // ========================================================
 let activePresetKey = null;
@@ -1045,11 +1064,6 @@ function loadPreset(key) {
     document.getElementById('flappiness').value = def.flappiness;
     document.getElementById('volume').value     = def.volume  * 100;
     updateLabels();
-
-    // Highlight active preset button
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('presetBtn_' + key);
-    if (btn) btn.classList.add('active');
 
     // Sync dropdown
     document.getElementById('loadedSample').value = key;
@@ -1152,7 +1166,7 @@ function setAppMode(mode) {
     // Presets
     const grid = document.getElementById('presetsGrid');
     grid.innerHTML = modeData.presets.map(p => `
-        <button class="preset-btn" id="presetBtn_${p.key}" onclick="loadPreset('${p.key}')">
+        <button class="preset-btn" onclick="playDirect('${p.key}')">
             <span class="emoji">${p.emoji}</span>
             <span class="name">${p.name}</span>
             <span class="desc">${p.desc}</span>
@@ -1171,13 +1185,20 @@ function setAppMode(mode) {
     document.getElementById('attributionFart').style.display = mode==='fart' ? '' : 'none';
     document.getElementById('attributionSfx').style.display  = mode==='sfx'  ? '' : 'none';
 
-    // Clear active preset selection on mode switch
-    activePresetKey = null;
-    activeBuffer    = null;
+    // Populate dropdown and default to first preset
     const sel = document.getElementById('loadedSample');
     sel.innerHTML = '<option value="">— Select a sound —</option>' +
         modeData.presets.map(p => `<option value="${p.key}">${p.emoji} ${p.name}</option>`).join('');
-    sel.value = '';
+    // Auto-select first preset if buffers already loaded
+    const firstKey = modeData.presets[0].key;
+    const firstDefs = mode === 'fart' ? fartPresetDefs : sfxPresetDefs;
+    if (firstDefs[firstKey] && (mode === 'fart' ? fartBuffers : sfxBuffers)[firstDefs[firstKey].buf]) {
+        loadPreset(firstKey);
+    } else {
+        activePresetKey = null;
+        activeBuffer    = null;
+        sel.value = '';
+    }
 
     // Reset counter display, update HOF
     document.getElementById('counter').textContent = playCount;
