@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title id="pageTitle">The Fart Factory - Artisanal Gas Since 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --bg1: #2d1b00;
+            --bg2: #4a2f00;
+            --bg3: #3d2600;
+            --accent: #7cfc00;
+            --accent2: #2d5a00;
+            --accent-glow: rgba(124, 252, 0, 0.3);
+            --text: #f5e6d3;
+            --text-muted: #c9a96e;
+            --text-dim: #8a7a5a;
+            --text-dimmer: #5a4a2a;
+            --slider-bg1: #3d2600;
+            --slider-bg2: #5a3a00;
+            --slider-thumb1: #9dfc40;
+            --slider-thumb2: #5a9a00;
+            --btn-bg1: #5a3a00;
+            --btn-bg2: #2d1b00;
+            --btn-active: #7a5a00;
+            --border: rgba(124, 252, 0, 0.15);
+            --border-hover: #7cfc00;
+            --decor: '~';
+        }
+
+        body.sfx-mode {
+            --bg1: #0a0a2e;
+            --bg2: #1a0833;
+            --bg3: #0d1b3e;
+            --accent: #00e5ff;
+            --accent2: #004466;
+            --accent-glow: rgba(0, 229, 255, 0.3);
+            --text: #e0f7ff;
+            --text-muted: #80d4e8;
+            --text-dim: #4a8a99;
+            --text-dimmer: #2a4a55;
+            --slider-bg1: #0d1b3e;
+            --slider-bg2: #1a3366;
+            --slider-thumb1: #40e0ff;
+            --slider-thumb2: #0099bb;
+            --btn-bg1: #1a0840;
+            --btn-bg2: #0a0a2e;
+            --btn-active: #2a1060;
+            --border: rgba(0, 229, 255, 0.15);
+            --border-hover: #00e5ff;
+        }
+
+        body {
+            font-family: 'Comic Neue', cursive;
+            background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.5s, color 0.3s;
+        }
+
+        /* ===== MODE TOGGLE ===== */
+        .mode-switcher {
+            display: inline-flex;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--accent);
+            border-radius: 40px;
+            overflow: hidden;
+            transition: border-color 0.4s;
+            margin-top: 1.5rem;
+        }
+
+        .mode-switcher-btn {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-family: 'Bangers', cursive;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+
+        .mode-switcher-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+
+        /* ===== FLOATING DECORATIONS ===== */
+        .deco {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.08;
+            font-size: 2.5rem;
+            animation: float 6s ease-in-out infinite;
+            user-select: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.08; }
+            50%       { transform: translateY(-30px) rotate(10deg); opacity: 0.15; }
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            text-align: center;
+            padding: 2rem 1rem 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-family: 'Bangers', cursive;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            color: var(--accent);
+            text-shadow: 3px 3px 0 var(--accent2), 0 0 30px var(--accent-glow);
+            letter-spacing: 3px;
+            animation: wobble 3s ease-in-out infinite;
+            transition: color 0.4s, text-shadow 0.4s;
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-1deg); }
+            50%       { transform: rotate(1deg); }
+        }
+
+        .site-owners { font-family: 'Bangers', cursive; font-size: 1.1rem; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 0.2rem; transition: color 0.4s; }
+        .subtitle { font-size: 1.2rem; color: var(--text-muted); margin-top: 0.5rem; font-style: italic; transition: color 0.4s; }
+        .tagline  { margin-top: 0.3rem; font-size: 0.9rem; color: var(--text-dim); transition: color 0.4s; }
+
+        /* ===== MAIN ===== */
+        .main-container { max-width: 900px; margin: 0 auto; padding: 1rem; position: relative; z-index: 1; }
+
+        /* ===== BIG BUTTON ===== */
+        button { touch-action: manipulation; } /* prevent double-tap zoom on all buttons */
+
+        .big-fart-btn {
+            display: block;
+            margin: 1.5rem auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            border: 6px solid var(--accent);
+            background: radial-gradient(circle at 40% 40%, var(--btn-bg1), var(--btn-bg2));
+            color: var(--accent);
+            font-family: 'Bangers', cursive;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.15s, background 0.4s, border-color 0.4s, color 0.4s;
+            box-shadow: 0 0 40px var(--accent-glow), inset 0 -5px 15px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .big-fart-btn::after {
+            content: '';
+            position: absolute;
+            top: 15%; left: 25%;
+            width: 30%; height: 20%;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+            transform: rotate(-20deg);
+        }
+        .big-fart-btn:hover  { transform: scale(1.08); box-shadow: 0 0 60px var(--accent-glow), inset 0 -5px 15px rgba(0,0,0,0.4); }
+        .big-fart-btn:active { transform: scale(0.95); }
+        .big-fart-btn.firing {
+            animation: shake 0.3s ease-in-out;
+            background: radial-gradient(circle at 40% 40%, var(--btn-active), var(--btn-bg2));
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0,0) rotate(0); }
+            20%  { transform: translate(-4px, 2px) rotate(-2deg); }
+            40%  { transform: translate(4px, -2px) rotate(2deg); }
+            60%  { transform: translate(-2px, 4px) rotate(-1deg); }
+            80%  { transform: translate(2px, -4px) rotate(1deg); }
+        }
+
+        /* ===== COUNTER ===== */
+        .fart-counter { text-align: center; font-family: 'Bangers', cursive; font-size: 1.3rem; color: var(--text-muted); margin: 0.5rem 0; transition: color 0.4s; }
+        .fart-counter span { color: var(--accent); font-size: 2rem; transition: color 0.4s; }
+
+        /* ===== CONTROLS ===== */
+        .controls-section {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 2px solid var(--border);
+            transition: border-color 0.4s;
+        }
+        .controls-section h2 { font-family: 'Bangers', cursive; color: var(--accent); font-size: 1.6rem; margin-bottom: 1rem; text-align: center; transition: color 0.4s; }
+
+        .slider-group { margin: 1rem 0; }
+        .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .slider-label span:first-child { font-weight: 700; font-size: 1rem; }
+        .slider-label .value { color: var(--accent); font-weight: 700; transition: color 0.4s; }
+        .slider-description { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.3rem; font-style: italic; transition: color 0.4s; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%; height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, var(--slider-bg1), var(--slider-bg2));
+            outline: none;
+            border: 1px solid var(--border);
+            transition: background 0.4s, border-color 0.4s;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, var(--slider-thumb1), var(--slider-thumb2));
+            cursor: pointer;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+            transition: border-color 0.4s, background 0.4s;
+        }
+
+        /* ===== PRESETS ===== */
+        .presets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.8rem; margin-top: 1rem; }
+        .preset-btn {
+            padding: 0.8rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: rgba(0,0,0,0.3);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-family: 'Comic Neue', cursive;
+            font-weight: 700;
+        }
+        .preset-btn:hover { border-color: var(--border-hover); background: rgba(0,0,0,0.5); transform: translateY(-2px); }
+        .preset-btn.active { border-color: var(--accent); background: var(--accent2); box-shadow: 0 0 12px var(--accent-glow); }
+
+        /* ===== LOADED SAMPLE DROPDOWN ===== */
+        .loaded-sample {
+            width: 100%;
+            margin: 0.6rem 0 1.2rem;
+            padding: 0.55rem 1rem;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: 'Comic Neue', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: border-color 0.4s, color 0.4s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
+            padding-right: 2.2rem;
+        }
+        .loaded-sample:focus { outline: none; border-color: var(--accent); }
+        .loaded-sample option { background: #1a1a1a; color: #eee; }
+        .preset-btn .emoji { font-size: 1.8rem; display: block; margin-bottom: 0.3rem; }
+        .preset-btn .name  { font-size: 0.95rem; font-weight: 700; color: var(--accent); display: block; transition: color 0.4s; }
+        .preset-btn .desc  { font-size: 0.75rem; color: var(--text-dim); display: block; margin-top: 0.25rem; transition: color 0.4s; }
+
+        /* ===== HISTORY / HOF ===== */
+        .history-section { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 1.5rem; margin: 1.5rem 0; border: 2px solid var(--border); transition: border-color 0.4s; }
+        .history-section h2 { font-family: 'Bangers', cursive; color: var(--accent); font-size: 1.6rem; margin-bottom: 0.5rem; text-align: center; transition: color 0.4s; }
+        #fart-log { max-height: 200px; overflow-y: auto; font-size: 0.9rem; }
+        .log-entry { padding: 0.4rem 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; transition: border-color 0.4s; }
+        .log-entry .rating { color: var(--accent); transition: color 0.4s; }
+
+        /* ===== REVIEWS ===== */
+        .review-section { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 1.5rem; margin: 1.5rem 0; border: 2px solid var(--border); transition: border-color 0.4s; }
+        .review { padding: 1rem; margin: 0.8rem 0; background: rgba(0,0,0,0.2); border-radius: 12px; border-left: 3px solid var(--accent); transition: border-color 0.4s; }
+        .review .stars  { color: #ffd700; font-size: 1.1rem; }
+        .review .author { color: var(--accent); font-weight: 700; margin-top: 0.4rem; font-size: 0.85rem; transition: color 0.4s; }
+
+        /* ===== VISUALIZER ===== */
+        .visualizer { display: flex; justify-content: center; align-items: flex-end; gap: 3px; height: 60px; margin: 1rem 0; }
+        .viz-bar { width: 6px; background: var(--accent); border-radius: 3px 3px 0 0; transition: height 0.05s; min-height: 3px; }
+
+        /* ===== DOWNLOAD BUTTON ===== */
+        .download-btn {
+            display: block;
+            margin: 0.5rem auto;
+            padding: 0.7rem 2rem;
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-family: 'Bangers', cursive;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .download-btn:hover { background: var(--accent); color: #000; transform: scale(1.05); }
+
+        /* ===== FOOTER ===== */
+        footer { text-align: center; padding: 2rem 1rem; color: var(--text-dimmer); font-size: 0.85rem; position: relative; z-index: 1; transition: color 0.4s; }
+        footer a { color: var(--accent); text-decoration: none; transition: color 0.4s; }
+
+        /* ===== PARTICLES ===== */
+        .particle-cloud {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 50%;
+            filter: blur(20px);
+            opacity: 0;
+            animation: poof 1.5s ease-out forwards;
+        }
+        @keyframes poof {
+            0%   { opacity: 0.5; transform: scale(0.3); }
+            100% { opacity: 0; transform: scale(2) translateY(-80px); }
+        }
+
+        .emoji-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 20;
+            font-size: 2.5rem;
+            animation: float-emoji 1.8s ease-out forwards;
+        }
+        @keyframes float-emoji {
+            0%   { opacity: 1; transform: translateY(0) scale(0.5) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(-120px) scale(1.5) rotate(30deg); }
+        }
+
+        /* Giant screen-crossing animal/object */
+        .stomper {
+            position: fixed;
+            bottom: 10%;
+            pointer-events: none;
+            z-index: 50;
+            font-size: 6rem;
+            animation: stomp-across 1.5s ease-in-out forwards;
+        }
+        @keyframes stomp-across {
+            0%   { left: -10%; opacity: 0; transform: scaleX(1) rotate(0deg); }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { left: 110%; opacity: 0; transform: scaleX(1) rotate(5deg); }
+        }
+        .stomper.big {
+            font-size: 9rem;
+            bottom: 5%;
+            animation-duration: 2s;
+        }
+
+        /* SFX mode sparkle decos */
+        body.sfx-mode .deco-fart { display: none; }
+        body:not(.sfx-mode) .deco-sfx { display: none; }
+    </style>
+</head>
+<body class="sfx-mode">
+
+<!-- Fart decorations -->
+<div class="deco deco-fart" style="top:10%;left:5%">~</div>
+<div class="deco deco-fart" style="top:30%;right:8%;animation-delay:1s">~</div>
+<div class="deco deco-fart" style="top:60%;left:3%;animation-delay:2s">~</div>
+<div class="deco deco-fart" style="top:80%;right:5%;animation-delay:3s">~</div>
+<div class="deco deco-fart" style="top:45%;left:90%;animation-delay:0.5s">~</div>
+<!-- SFX decorations -->
+<div class="deco deco-sfx" style="top:10%;left:5%;animation-delay:0.2s">⚡</div>
+<div class="deco deco-sfx" style="top:30%;right:8%;animation-delay:1.1s">✨</div>
+<div class="deco deco-sfx" style="top:60%;left:3%;animation-delay:2.2s">🎵</div>
+<div class="deco deco-sfx" style="top:80%;right:5%;animation-delay:0.7s">🔮</div>
+<div class="deco deco-sfx" style="top:45%;left:90%;animation-delay:1.5s">💫</div>
+
+<header>
+    <p class="site-owners">Theo &amp; Joah's</p>
+    <h1 id="siteTitle">The Fart Factory</h1>
+    <p class="subtitle" id="siteSubtitle">Artisanal, Hand-Crafted, Small-Batch Gas Since 2026</p>
+    <p class="tagline"   id="siteTagline">"Where every toot is a masterpiece" — Nobody, Ever</p>
+</header>
+
+<div class="main-container">
+
+    <div class="fart-counter">
+        <span id="counterLabel">Total farts unleashed:</span> <span id="counter">0</span>
+    </div>
+
+    <button class="big-fart-btn" id="fartBtn" onclick="unleashSound()">
+        <span id="btnText">RELEASE<br>THE<br>BEAST</span>
+    </button>
+
+    <div class="visualizer" id="visualizer"></div>
+
+    <!-- CONTROLS -->
+    <div class="controls-section">
+        <h2 id="labTitle">Fart Engineering Lab</h2>
+        <select id="loadedSample" class="loaded-sample" onchange="if(this.value) loadPreset(this.value)">
+            <option value="">— Select a sound —</option>
+        </select>
+
+        <div class="slider-group">
+            <div class="slider-label">
+                <span id="lblDuration">Duration</span>
+                <span class="value" id="durationVal">0.5s</span>
+            </div>
+            <div class="slider-description" id="descDuration">How long can you hold it?</div>
+            <input type="range" id="duration" min="0.1" max="12" step="0.1" value="0.5">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label">
+                <span id="lblPitch">Pitch</span>
+                <span class="value" id="pitchVal">Medium</span>
+            </div>
+            <div class="slider-description" id="descPitch">From "rumbling earthquake" to "squeaky balloon animal"</div>
+            <input type="range" id="pitch" min="40" max="300" step="1" value="120">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label">
+                <span id="lblWetness">Wetness</span>
+                <span class="value" id="wetnessVal">Dry</span>
+            </div>
+            <div class="slider-description" id="descWetness">Proceed with caution beyond 70%...</div>
+            <input type="range" id="wetness" min="0" max="100" step="1" value="20">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label">
+                <span id="lblReverb">Reverb (Room Size)</span>
+                <span class="value" id="reverbVal">Bathroom</span>
+            </div>
+            <div class="slider-description" id="descReverb">From phone booth to cathedral</div>
+            <input type="range" id="reverb" min="0" max="100" step="1" value="40">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label">
+                <span id="lblFlappiness">Flappiness</span>
+                <span class="value" id="flappinessVal">Mild</span>
+            </div>
+            <div class="slider-description" id="descFlappiness">The ol' motorboat factor</div>
+            <input type="range" id="flappiness" min="1" max="40" step="1" value="12">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-label">
+                <span id="lblVolume">Volume</span>
+                <span class="value" id="volumeVal">Polite</span>
+            </div>
+            <div class="slider-description" id="descVolume">From "silent but deadly" to "the neighbors called"</div>
+            <input type="range" id="volume" min="0" max="100" step="1" value="60">
+        </div>
+    </div>
+
+    <!-- PRESETS -->
+    <div class="controls-section">
+        <h2 id="collectionTitle">Soundboard</h2>
+        <div class="presets-grid" id="presetsGrid"></div>
+    </div>
+
+    <!-- HALL OF FAME -->
+    <div class="history-section">
+        <h2>Hall of Fame</h2>
+        <p style="text-align:center;color:var(--text-dim);font-size:0.85rem;margin-bottom:1rem;font-style:italic;" id="hofSubtitle">Most-played sounds of all time</p>
+        <div id="fart-log">
+            <p style="color:var(--text-dim);text-align:center;font-style:italic;" id="hofEmpty">Nothing yet. History awaits your contribution.</p>
+        </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="review-section">
+        <h2 style="font-family:'Bangers',cursive;color:var(--accent);font-size:1.6rem;text-align:center;margin-bottom:1rem;">Rave Reviews</h2>
+        <div id="reviewsContainer"></div>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <button class="download-btn" onclick="downloadSite()">⬇️ Download This Site</button>
+</div>
+
+<footer>
+    <div class="mode-switcher">
+        <button class="mode-switcher-btn active" id="btnSfxMode"  onclick="setAppMode('sfx')">🔊 SFX Mode</button>
+        <button class="mode-switcher-btn"        id="btnFartMode" onclick="setAppMode('fart')">💨 Fart Mode</button>
+    </div>
+    <p id="footerLine1" style="margin-top:1.5rem;">&copy; 2026 The Fart Factory &mdash; All Toots Reserved.</p>
+    <p style="margin-top:0.5rem;" id="footerLine2">Made with 💨 and questionable life choices</p>
+    <p style="margin-top:0.3rem;font-size:0.75rem;" id="footerLine3">No butts were harmed in the making of this website.</p>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-size:0.75rem;color:var(--text-dimmer);max-width:600px;margin-left:auto;margin-right:auto;">
+        <p style="color:var(--text-dim);margin-bottom:0.4rem;">Sound Effects — CC0 1.0 Universal (No Attribution Required)</p>
+        <p id="attributionFart">"Juicy Fart" series by <a href="https://freesound.org/people/Zott820/">Zott820</a> via <a href="https://freesound.org">Freesound.org</a> &mdash; <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a></p>
+        <p id="attributionSfx" style="display:none">
+            Car Horn by <a href="https://freesound.org/people/DeVern/">DeVern</a> &bull;
+            Laser by <a href="https://freesound.org/people/BloodPixelHero/">BloodPixelHero</a> &bull;
+            Laser (zap) by <a href="https://freesound.org/people/belanhud/">belanhud</a> &bull;
+            Wilhelm Scream by <a href="https://freesound.org/people/qubodup/">qubodup</a> &bull;
+            Cash Register by <a href="https://freesound.org/people/CapsLok/">CapsLok</a> &bull;
+            Explosion by <a href="https://freesound.org/people/florianreichelt/">florianreichelt</a> &bull;
+            Nuke by <a href="https://freesound.org/people/qubodup/">qubodup</a> &bull;
+            Sad Trombone by <a href="https://freesound.org/people/kirbydx/">kirbydx</a> &bull;
+            Fanfare by <a href="https://freesound.org/people/Wagna/">Wagna</a> &bull;
+            Airhorn by <a href="https://freesound.org/people/FunWithSound/">FunWithSound</a> &bull;
+            Record Scratch by <a href="https://freesound.org/people/LiftPizzas/">LiftPizzas</a> &bull;
+            Boing by <a href="https://freesound.org/people/magnuswaker/">magnuswaker</a> &bull;
+            Slide Whistle by <a href="https://freesound.org/people/SamuelGremaud/">SamuelGremaud</a> &bull;
+            Applause by <a href="https://freesound.org/people/Department64/">Department64</a>
+            &mdash; all via <a href="https://freesound.org">Freesound.org</a> / <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>
+        </p>
+    </div>
+</footer>
+
+<script>
+// ========================================================
+// MODE DATA
+// ========================================================
+const MODES = {
+    fart: {
+        bodyClass: '',
+        pageTitle:  'The Fart Factory - Artisanal Gas Since 2026',
+        siteTitle:  'The Fart Factory',
+        subtitle:   'Artisanal, Hand-Crafted, Small-Batch Gas Since 2026',
+        tagline:    '"Where every toot is a masterpiece" — Nobody, Ever',
+        counterLabel: 'Total farts unleashed:',
+        btnText:    'RELEASE<br>THE<br>BEAST',
+        labTitle:   'Fart Engineering Lab',
+        collTitle:  'Soundboard',
+        hofSubtitle:'Most-played farts of all time',
+        hofEmpty:   'No farts recorded yet. History awaits your contribution.',
+        footerLine1:'&copy; 2026 The Fart Factory &mdash; All Toots Reserved.',
+        footerLine2:'Made with 💨 and questionable life choices',
+        footerLine3:'No butts were harmed in the making of this website.',
+        sliders: {
+            duration:   { label: 'Duration',         desc: 'How long can you hold it?' },
+            pitch:      { label: 'Pitch',             desc: 'From "rumbling earthquake" to "squeaky balloon animal"' },
+            wetness:    { label: 'Wetness',           desc: 'Proceed with caution beyond 70%...' },
+            reverb:     { label: 'Reverb (Room Size)',desc: 'From phone booth to cathedral' },
+            flappiness: { label: 'Flappiness',        desc: 'The ol\' motorboat factor' },
+            volume:     { label: 'Volume',            desc: 'From "silent but deadly" to "the neighbors called"' },
+        },
+        wetnessLabels:    ['Bone Dry','Dry','Slightly Moist','Moist','Wet','Swampy','DANGER ZONE'],
+        reverbLabels:     ['Phone Booth','Closet','Bathroom','Living Room','Gymnasium','Cathedral'],
+        flappinessLabels: ['Smooth','Mild','Fluttery','Maximum Flutter','MACHINE GUN'],
+        volumeLabels:     ['Silent But Deadly','Polite','Noticeable','Loud','Neighborhood Alert','Seismic Event'],
+        reviews: [
+            { stars:5, text: '"I\'ve been a professional fart sommelier for 15 years. This is the finest synthetic flatulence I\'ve ever experienced."', author: 'GasConnoisseur42' },
+            { stars:5, text: '"My marriage counselor said we needed a shared hobby. We\'ve never been closer."', author: 'HappilyMarried_Maybe' },
+            { stars:4, text: '"Lost one star because \'The Ripper\' preset made my dog leave the room. He knows it\'s not real. HOW DOES HE KNOW."', author: 'ConfusedDogOwner' },
+            { stars:5, text: '"Used the Cathedral Echo during a Zoom meeting. Got promoted. Not sure of the correlation but I\'m not questioning it."', author: 'CorpGassy_CEO' },
+            { stars:5, text: '"Finally, a website that respects the art form."', author: 'LeButtMusician' },
+        ],
+        presets: [
+            { key:'squeaker',    emoji:'🐭', name:'The Squeaker',      desc:'Quick & high-pitched' },
+            { key:'thunderclap', emoji:'⚡', name:'Thunderclap',        desc:'Low, long & proud' },
+            { key:'machine_gun', emoji:'💥', name:'Machine Gun',        desc:'Rapid fire' },
+            { key:'whoopee',     emoji:'🎪', name:'Whoopee Cushion',    desc:'The classic' },
+            { key:'deflating',   emoji:'🎈', name:'Deflating Balloon',  desc:'Long & descending' },
+            { key:'tuba',        emoji:'🎺', name:'The Tuba',           desc:'Deep brass energy' },
+            { key:'ripper',      emoji:'🔥', name:'The Ripper',         desc:'Wet & unforgiving' },
+            { key:'stealth',     emoji:'🥷', name:'Silent But Deadly',  desc:'You won\'t hear it...' },
+            { key:'cathedral',   emoji:'⛪', name:'Cathedral Echo',     desc:'Maximum reverb' },
+            { key:'duck',        emoji:'🦆', name:'Sitting Duck',       desc:'Quack quack' },
+            { key:'volcano',     emoji:'🌋', name:'Mount Vesuvius',     desc:'Catastrophic event' },
+            { key:'morse',       emoji:'📡', name:'Morse Code',         desc:'Dit-dit-daaaah' },
+        ],
+        hofLabel: (label, count) => `${label} (${count} toot${count!==1?'s':''})`,
+        particles: (key) => {
+            const map = {
+                squeaker:    ['💨','🐭','💨'],
+                thunderclap: ['⚡','💨','🌪️'],
+                machine_gun: ['💥','💨','💥'],
+                whoopee:     ['🎪','💨','🤣'],
+                deflating:   ['🎈','💨','🫧'],
+                tuba:        ['🎺','💨','🎵'],
+                ripper:      ['🔥','💩','💨'],
+                stealth:     ['🥷','😶','💨'],
+                cathedral:   ['⛪','🙏','💨'],
+                duck:        ['🦆','💨','🐣'],
+                volcano:     ['🌋','💥','🔥'],
+                morse:       ['📡','💨','📻'],
+            };
+            return map[key] || ['💨','💨','💨'];
+        },
+        stomper: (key) => {
+            const map = { volcano:'🌋', thunderclap:'⚡', machine_gun:'💥', ripper:'💩' };
+            return map[key] || null;
+        },
+    },
+
+    sfx: {
+        bodyClass: 'sfx-mode',
+        pageTitle:  'Sound Canon - Excellent Sound Effects Since 2026',
+        siteTitle:  'Sound Canon',
+        subtitle:   'Excellent Sound Effects, Since 2026',
+        tagline:    '"Every sound effect is a power move" — Someone Confident',
+        counterLabel: 'Total sounds fired:',
+        btnText:    'FIRE THE<br>CANNON',
+        labTitle:   'Sound Engineering Lab',
+        collTitle:  'Soundboard',
+        hofSubtitle:'Most-fired sounds of all time',
+        hofEmpty:   'Nothing fired yet. Load up and let it rip.',
+        footerLine1:'&copy; 2026 Sound Canon &mdash; All Rights Boomed.',
+        footerLine2:'Made with ⚡ and irresponsible audio decisions',
+        footerLine3:'No eardrums were permanently harmed. Probably.',
+        sliders: {
+            duration:   { label: 'Duration',    desc: 'How long does it echo through the halls of destiny?' },
+            pitch:      { label: 'Pitch',        desc: 'From subwoofer earthquake to dog-whistle ultrasound' },
+            wetness:    { label: 'Distortion',   desc: 'From studio clean to totally obliterated' },
+            reverb:     { label: 'Space',        desc: 'From recording booth to the surface of Mars' },
+            flappiness: { label: 'Tremolo',      desc: 'From steady beam to machine-gun vibrato' },
+            volume:     { label: 'Volume',       desc: 'From ASMR whisper to wall of sound' },
+        },
+        wetnessLabels:    ['Crystal Clean','Slight Grit','Crunchy','Saturated','Fried','Obliterated','TOTAL CARNAGE'],
+        reverbLabels:     ['Anechoic Booth','Studio','Concert Hall','Cathedral','Grand Canyon','Outer Space'],
+        flappinessLabels: ['Steady Beam','Subtle Pulse','Warble','Full Tremolo','MACHINE GUN'],
+        volumeLabels:     ['ASMR','Background','Noticeable','Loud','Call the Cops','SEISMIC EVENT'],
+        reviews: [
+            { stars:5, text: '"I played the Laser Blaster in my board meeting. The deal closed immediately. Coincidence? I think not."', author: 'PowerUser_CEO' },
+            { stars:5, text: '"The Standing Ovation preset solved my impostor syndrome. I now play it every time I enter a room."', author: 'EntranceQueen' },
+            { stars:5, text: '"I rigged the Cash Register to play every time my website gets a sale. I have not slept in three days."', author: 'SaaS_Founder_Guy' },
+            { stars:4, text: '"Lost a star because my cat now flinches every time I open a zip file. Worth it."', author: 'ConfusedCatOwner' },
+            { stars:5, text: '"Finally, a website that takes sound effects as seriously as I do."', author: 'AudioEngineer_NotBitter' },
+        ],
+        presets: [
+            { key:'car_horn',       emoji:'🚗', name:'Road Rager',        desc:'Straight from rush hour' },
+            { key:'laser',          emoji:'⚡', name:'Pew Pew Laser',     desc:'Sci-fi standard' },
+            { key:'wilhelm',        emoji:'😱', name:'Wilhelm Scream',    desc:'The classic' },
+            { key:'cash_register',  emoji:'💰', name:'Cha-Ching',          desc:'Money incoming' },
+            { key:'explosion',      emoji:'💥', name:'Big Kaboom',         desc:'Catastrophic' },
+            { key:'sad_trombone',   emoji:'🎺', name:'Sad Trombone',      desc:'Wah wah waaah' },
+            { key:'fanfare',        emoji:'🏆', name:'Victory Fanfare',   desc:'You win!' },
+            { key:'laser_fast',     emoji:'🔫', name:'Laser Storm',       desc:'Rapid fire' },
+            { key:'dj_airhorn',     emoji:'📣', name:'DJ Airhorn',        desc:'Get hyped' },
+            { key:'record_scratch', emoji:'💿', name:'Record Scratch',    desc:'Hold up.' },
+            { key:'boing',          emoji:'🫧', name:'Boing',             desc:'Cartoon physics' },
+            { key:'slide_whistle',  emoji:'🎵', name:'Slide Whistle',     desc:'Wheeeee' },
+            { key:'car_horn_long',  emoji:'🚕', name:'Endless Honk',      desc:'Maximum frustration' },
+            { key:'explosion_big',  emoji:'🌋', name:'Nuke',              desc:'Don\'t.' },
+            { key:'applause',       emoji:'👏', name:'Standing Ovation',  desc:'You deserve this' },
+            { key:'pizza_moon',     emoji:'🍕', name:'Pizza & Moon',      desc:'Lasers. Giants. Pizza.' },
+        ],
+        hofLabel: (label, count) => `${label} (${count} shot${count!==1?'s':''})`,
+        particles: (key) => {
+            const map = {
+                car_horn:      ['🚗','🚕','🚙'],
+                laser:         ['⚡','✨','🔮'],
+                applause:      ['👏','⭐','🌟'],
+                cash_register: ['💰','💵','🤑'],
+                explosion:     ['💥','🔥','🌋'],
+                zipper:        ['🤐','✨','🏎️'],
+                fanfare:       ['🎺','🏆','🎉'],
+                laser_fast:    ['⚡','⚡','✨'],
+                car_horn_long: ['🚗','😤','🚗'],
+                wilhelm:       ['😱','💀','😱'],
+                sad_trombone:  ['😢','🎺','😞'],
+                dj_airhorn:    ['📣','🔊','📣'],
+                record_scratch:['💿','✋','💿'],
+                boing:         ['🫧','⭕','🫧'],
+                slide_whistle: ['🎵','🌀','🎶'],
+                applause:      ['👏','🌟','👏'],
+                explosion_big: ['💥','🌋','💥'],
+                pizza_moon:    ['🍕','🌕','🍕','⚡','🔫','🌕','🍕','⚡','🍕','🌕','💫','🏆','🍕','🌕','⚡'],
+            };
+            return map[key] || ['✨','⚡','🎵'];
+        },
+        stomper: (key) => {
+            const map = {
+                explosion:     '💥',
+                explosion_big: '💥',
+                car_horn:      '🚗',
+                car_horn_long: '🚕',
+                laser:         '⚡',
+                laser_fast:    '⚡',
+                pizza_moon:    '🌕',
+                fanfare:       '🏆',
+            };
+            return map[key] || null;
+        },
+    }
+};
+
+// ========================================================
+// AUDIO ENGINE
+// ========================================================
+let audioCtx = null;
+let appMode  = 'sfx';
+let playCount = 0;
+const hallOfFame = { fart: {}, sfx: {} };
+
+function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+function getParams() {
+    return {
+        duration:   parseFloat(document.getElementById('duration').value),
+        pitch:      parseFloat(document.getElementById('pitch').value),
+        wetness:    parseFloat(document.getElementById('wetness').value) / 100,
+        reverb:     parseFloat(document.getElementById('reverb').value) / 100,
+        flappiness: parseFloat(document.getElementById('flappiness').value),
+        volume:     parseFloat(document.getElementById('volume').value) / 100
+    };
+}
+
+// ---- Sound buffers ----
+const fartBuffers = {};
+const sfxBuffers  = {};
+
+// Raw ArrayBuffers fetched before any AudioContext exists (mobile-safe)
+const fartRaw = {};
+const sfxRaw  = {};
+const decodedKeys = new Set(); // tracks which raw keys have been decoded into buffers
+
+async function decodeRawIfNeeded(rawStore, bufStore) {
+    const ctx = audioCtx;
+    await Promise.all(
+        Object.entries(rawStore)
+            .filter(([k]) => !decodedKeys.has(k))
+            .map(async ([k, ab]) => {
+                try {
+                    bufStore[k] = await ctx.decodeAudioData(ab.slice(0));
+                    decodedKeys.add(k);
+                } catch(e) { console.warn('Decode fail:', k, e); }
+            })
+    );
+}
+
+// Single entry point for all audio setup — call at the top of every gesture handler.
+// Creates AudioContext inside the gesture (iOS requirement), resumes it, then decodes
+// any raw buffers that have been fetched since the last call.
+async function ensureAudioReady() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state !== 'running') await audioCtx.resume();
+
+    const hasNew = Object.keys(sfxRaw).some(k => !decodedKeys.has(k)) ||
+                   Object.keys(fartRaw).some(k => !decodedKeys.has(k));
+    if (hasNew) {
+        await Promise.all([
+            decodeRawIfNeeded(sfxRaw, sfxBuffers),
+            decodeRawIfNeeded(fartRaw, fartBuffers),
+        ]);
+        // Refresh activeBuffer — it may have been null before decoding finished
+        if (!activeBuffer) loadPreset(activePresetKey || MODES[appMode].presets[0].key);
+    }
+}
+
+const FART_SOUNDS = {
+    squeaky:       'sfx/squeaky.mp3',
+    juicy:         'sfx/juicy.mp3',
+    'long-wet':    'sfx/long-wet.mp3',
+    'long-rumbly': 'sfx/long-rumbly.mp3',
+    'quick-wet':   'sfx/quick-wet.mp3',
+    'medium-wet':  'sfx/medium-wet.mp3',
+    'big-wet':     'sfx/big-wet.mp3',
+};
+
+const SFX_SOUNDS = {
+    'car-horn':       'sfx-cool/car-horn.mp3',
+    laser:            'sfx-cool/laser.mp3',
+    'raygun-zap':     'sfx-cool/raygun-zap.mp3',
+    applause:         'sfx-cool/applause.mp3',
+    'cash-register':  'sfx-cool/cash-register.mp3',
+    explosion:        'sfx-cool/explosion.mp3',
+    zipper:           'sfx-cool/zipper.mp3',
+    fanfare:          'sfx-cool/fanfare.mp3',
+    nuke:             'sfx-cool/nuke.mp3',
+    'sad-trombone':   'sfx-cool/sad-trombone.mp3',
+    'dj-airhorn':     'sfx-cool/dj-airhorn.mp3',
+    'slide-whistle':  'sfx-cool/slide-whistle.mp3',
+    wilhelm:          'sfx-cool/wilhelm.mp3',
+    boing:            'sfx-cool/boing.mp3',
+    'record-scratch': 'sfx-cool/record-scratch.mp3',
+};
+
+async function fetchRaw(path, store, key) {
+    try {
+        const res = await fetch(path);
+        store[key] = await res.arrayBuffer();
+    } catch(e) { console.warn('Failed to fetch:', path, e); }
+}
+
+
+async function loadAllSounds() {
+    const btn = document.getElementById('fartBtn');
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+
+    // Fetch current mode's audio as raw bytes — no AudioContext created yet (mobile-safe)
+    const currentRaw   = appMode === 'sfx' ? sfxRaw : fartRaw;
+    const currentSounds = appMode === 'sfx' ? SFX_SOUNDS : FART_SOUNDS;
+    await Promise.all(Object.entries(currentSounds).map(([k,v]) => fetchRaw(v, currentRaw, k)));
+
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+
+    // Fetch the other mode's sounds in the background (still no AudioContext)
+    const otherRaw   = appMode === 'sfx' ? fartRaw : sfxRaw;
+    const otherSounds = appMode === 'sfx' ? FART_SOUNDS : SFX_SOUNDS;
+    Object.entries(otherSounds).forEach(([k,v]) => fetchRaw(v, otherRaw, k));
+}
+
+// ---- Shared DSP ----
+function makeReverb(ctx, secs) {
+    const rate = ctx.sampleRate;
+    const len  = Math.ceil(rate * Math.max(0.3, secs));
+    const buf  = ctx.createBuffer(2, len, rate);
+    for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++)
+            d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 1.8);
+    }
+    const conv = ctx.createConvolver();
+    conv.buffer = buf;
+    return conv;
+}
+
+function makeDistortion(ctx, amount) {
+    const ws    = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+        const x = (i/128)-1;
+        curve[i] = (Math.PI+amount)*x / (Math.PI+amount*Math.abs(x));
+    }
+    ws.curve = curve;
+    return ws;
+}
+
+function playSampleBuffer(buffer, params) {
+    if (!buffer) return 0;
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const { duration, pitch, wetness, reverb, flappiness, volume } = params;
+
+    const rate     = Math.pow(pitch / 120, 1.4);
+    const nativeDur = buffer.duration / rate;
+    const soundDur  = duration;
+
+    const dist = makeDistortion(ctx, wetness * 80);
+
+    const tremoloGain = ctx.createGain();
+    tremoloGain.gain.value = 1;
+    if (flappiness > 3) {
+        const lfo = ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = flappiness;
+        const lfoDepth = ctx.createGain();
+        lfoDepth.gain.value = 0.25;
+        lfo.connect(lfoDepth).connect(tremoloGain.gain);
+        lfo.start(now); lfo.stop(now + soundDur + 0.1);
+    }
+
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(volume, now);
+    env.gain.setValueAtTime(volume, now + soundDur * 0.75);
+    env.gain.exponentialRampToValueAtTime(0.001, now + soundDur + 0.05);
+
+    const dry = ctx.createGain(); dry.gain.value = 1 - reverb * 0.75;
+    const wet = ctx.createGain(); wet.gain.value = reverb * 0.8;
+    const rev = makeReverb(ctx, reverb * 2.5 + 0.2);
+
+    dist.connect(tremoloGain).connect(env);
+    env.connect(dry).connect(ctx.destination);
+    env.connect(rev).connect(wet).connect(ctx.destination);
+
+    if (soundDur > nativeDur * 1.02) {
+        // Granular time stretch — overlapping windowed grains fill target duration
+        const grainLen   = Math.min(0.12, nativeDur * 0.5);
+        const outputHop  = grainLen * 0.4;
+        const stretchRatio = soundDur / nativeDur;
+        const sourceHop  = (outputHop / stretchRatio) * rate; // in buffer-time
+        const numGrains  = Math.ceil(soundDur / outputHop) + 2;
+        const grainVol   = 1 / 2.5; // compensate for ~2.5× overlap
+
+        for (let i = 0; i < numGrains; i++) {
+            const outOffset = i * outputHop;
+            if (outOffset >= soundDur) break;
+            const srcOffset = (i * sourceHop) % buffer.duration;
+            const availLen  = Math.min(grainLen, (buffer.duration - srcOffset) / rate);
+            if (availLen < 0.01) continue;
+
+            const src = ctx.createBufferSource();
+            src.buffer = buffer;
+            src.playbackRate.value = rate;
+
+            const gg = ctx.createGain();
+            const t0 = now + outOffset;
+            gg.gain.setValueAtTime(0, t0);
+            gg.gain.linearRampToValueAtTime(grainVol, t0 + grainLen * 0.5);
+            gg.gain.linearRampToValueAtTime(0, t0 + grainLen);
+
+            src.connect(gg).connect(dist);
+            src.start(t0, srcOffset, availLen);
+        }
+    } else {
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.playbackRate.value = rate;
+        src.connect(dist);
+        src.start(now);
+        src.stop(now + soundDur + 0.15);
+    }
+
+    return soundDur;
+}
+
+// ---- Fart preset map ----
+function pickFartBuffer(pitch, wetness) {
+    if (pitch > 200) return fartBuffers['squeaky'];
+    if (wetness > 0.7) return fartBuffers['big-wet'];
+    if (wetness > 0.5) return fartBuffers['juicy'];
+    if (pitch < 70)   return fartBuffers['long-rumbly'];
+    if (pitch < 100)  return fartBuffers['long-wet'];
+    if (wetness < 0.1) return fartBuffers['squeaky'];
+    return fartBuffers['medium-wet'];
+}
+
+const fartPresetDefs = {
+    squeaker:    { buf:'squeaky',      duration:0.3,  pitch:260, wetness:0.05, reverb:0.10, flappiness:28, volume:0.85 },
+    thunderclap: { buf:'long-rumbly',  duration:2.5,  pitch:58,  wetness:0.30, reverb:0.55, flappiness:6,  volume:0.85 },
+    machine_gun: { buf:'quick-wet',    duration:0.18, pitch:140, wetness:0.15, reverb:0.15, flappiness:38, volume:0.85 },
+    whoopee:     { buf:'medium-wet',   duration:0.9,  pitch:105, wetness:0.30, reverb:0.35, flappiness:14, volume:0.85 },
+    deflating:   { buf:'long-wet',     duration:3.0,  pitch:190, wetness:0.18, reverb:0.20, flappiness:4,  volume:0.85 },
+    tuba:        { buf:'long-rumbly',  duration:1.6,  pitch:48,  wetness:0.22, reverb:0.65, flappiness:5,  volume:0.85 },
+    ripper:      { buf:'big-wet',      duration:1.3,  pitch:88,  wetness:0.92, reverb:0.28, flappiness:22, volume:0.85 },
+    stealth:     { buf:'squeaky',      duration:0.5,  pitch:170, wetness:0.35, reverb:0.08, flappiness:2,  volume:0.04 },
+    cathedral:   { buf:'medium-wet',   duration:1.0,  pitch:82,  wetness:0.28, reverb:1.00, flappiness:10, volume:0.85 },
+    duck:        { buf:'squeaky',      duration:0.25, pitch:230, wetness:0.12, reverb:0.12, flappiness:24, volume:0.85 },
+    volcano:     { buf:'long-wet',     duration:3.0,  pitch:42,  wetness:0.85, reverb:0.82, flappiness:9,  volume:1.00 },
+    morse:       { buf:'quick-wet',    duration:0.14, pitch:155, wetness:0.08, reverb:0.18, flappiness:32, volume:0.85 },
+};
+
+function playFartPreset(key) {
+    const def = fartPresetDefs[key];
+    if (!def) return 0;
+    const buf = fartBuffers[def.buf];
+    if (key === 'machine_gun') {
+        const shots=7, gap=0.19;
+        for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(buf,def), i*gap*1000);
+        return shots * gap;
+    }
+    if (key === 'morse') {
+        const dot = def.duration;
+        playSampleBuffer(buf, def);
+        setTimeout(()=>playSampleBuffer(buf,def), dot*1.8*1000);
+        setTimeout(()=>playSampleBuffer(buf,{...def,duration:dot*3.5}), dot*3.6*1000);
+        return dot*7.5;
+    }
+    return playSampleBuffer(buf, def);
+}
+
+// ---- SFX preset map ----
+const sfxPresetDefs = {
+    car_horn:       { buf:'car-horn',       duration:0.8,  pitch:110, wetness:0.10, reverb:0.25, flappiness:2,  volume:0.85 },
+    laser:          { buf:'raygun-zap',     duration:1.0,  pitch:110, wetness:0.05, reverb:0.25, flappiness:4,  volume:0.85 },
+    wilhelm:        { buf:'wilhelm',        duration:1.2,  pitch:110, wetness:0.05, reverb:0.35, flappiness:2,  volume:0.85 },
+    cash_register:  { buf:'cash-register',  duration:0.6,  pitch:120, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    explosion:      { buf:'explosion',      duration:2.5,  pitch:85,  wetness:0.20, reverb:0.70, flappiness:3,  volume:0.85 },
+    sad_trombone:   { buf:'sad-trombone',   duration:4.0,  pitch:100, wetness:0.05, reverb:0.30, flappiness:2,  volume:0.85 },
+    fanfare:        { buf:'fanfare',        duration:2.5,  pitch:110, wetness:0.05, reverb:0.45, flappiness:2,  volume:0.85 },
+    laser_fast:     { buf:'laser',          duration:0.3,  pitch:130, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    dj_airhorn:     { buf:'dj-airhorn',     duration:1.5,  pitch:100, wetness:0.05, reverb:0.20, flappiness:2,  volume:0.85 },
+    record_scratch: { buf:'record-scratch', duration:1.0,  pitch:110, wetness:0.05, reverb:0.10, flappiness:2,  volume:0.85 },
+    boing:          { buf:'boing',          duration:0.8,  pitch:110, wetness:0.05, reverb:0.20, flappiness:2,  volume:0.85 },
+    slide_whistle:  { buf:'slide-whistle',  duration:1.5,  pitch:110, wetness:0.05, reverb:0.15, flappiness:2,  volume:0.85 },
+    car_horn_long:  { buf:'car-horn',       duration:12.0, pitch:90,  wetness:0.05, reverb:0.30, flappiness:2,  volume:0.85 },
+    explosion_big:  { buf:'nuke',           duration:12.0, pitch:90,  wetness:0.10, reverb:0.85, flappiness:2,  volume:1.00 },
+    applause:       { buf:'applause',       duration:3.0,  pitch:100, wetness:0.05, reverb:0.50, flappiness:2,  volume:0.85 },
+    pizza_moon:     { buf:'fanfare',        duration:1.5,  pitch:160, wetness:0.30, reverb:0.80, flappiness:20, volume:0.85 },
+};
+
+function playSfxPreset(key) {
+    const def = sfxPresetDefs[key];
+    if (!def) return 0;
+    const buf = sfxBuffers[def.buf];
+    if (key === 'laser_fast') {
+        const shots=5, gap=0.25;
+        for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(buf,def), i*gap*1000);
+        return shots * gap;
+    }
+    if (key === 'slide_whistle') {
+        // Upward pitch slide via playbackRate ramp
+        const ctx = getAudioCtx();
+        const now = ctx.currentTime;
+        const dur = def.duration;
+        const env = ctx.createGain();
+        env.gain.setValueAtTime(def.volume, now);
+        env.gain.setValueAtTime(def.volume, now + dur * 0.8);
+        env.gain.exponentialRampToValueAtTime(0.001, now + dur + 0.05);
+        env.connect(ctx.destination);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.playbackRate.setValueAtTime(0.6, now);
+        src.playbackRate.exponentialRampToValueAtTime(2.2, now + dur);
+        src.connect(env);
+        src.start(now);
+        src.stop(now + dur + 0.1);
+        return dur;
+    }
+    if (key === 'pizza_moon') {
+        // CHAOS: fanfare + crowd roar + laser barrage all at once
+        playSampleBuffer(sfxBuffers['fanfare'],   {duration:3.0, pitch:130, wetness:0.05, reverb:0.50, flappiness:2,  volume:0.90});
+        playSampleBuffer(sfxBuffers['applause'],  {duration:3.5, pitch:95,  wetness:0.05, reverb:0.70, flappiness:1,  volume:0.85});
+        const laserDef = {duration:0.4, pitch:140, wetness:0.05, reverb:0.20, flappiness:2, volume:0.75};
+        const laserBuf = sfxBuffers['raygun-zap'] || sfxBuffers['laser'];
+        const shots=8, gap=0.18;
+        for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(laserBuf, laserDef), i*gap*1000);
+        return 3.5;
+    }
+    return playSampleBuffer(buf, def);
+}
+
+// ========================================================
+// VISUALIZER
+// ========================================================
+const vizContainer = document.getElementById('visualizer');
+for (let i = 0; i < 40; i++) {
+    const b = document.createElement('div');
+    b.className = 'viz-bar';
+    vizContainer.appendChild(b);
+}
+const vizBars = vizContainer.querySelectorAll('.viz-bar');
+let vizInterval = null;
+
+function startVisualizer(duration) {
+    const start = Date.now();
+    const ms    = Math.min(duration*1000, 6000);
+    clearInterval(vizInterval);
+    vizInterval = setInterval(() => {
+        const elapsed = Date.now() - start;
+        if (elapsed > ms + 200) { vizBars.forEach(b => b.style.height='3px'); clearInterval(vizInterval); return; }
+        const decay = Math.max(0, 1 - elapsed/ms);
+        vizBars.forEach(bar => {
+            bar.style.height = (Math.random()*55*decay+3)+'px';
+            bar.style.background = `hsl(${appMode==='sfx'?190:90}deg ${100}% ${35+Math.random()*25}%)`;
+        });
+    }, 50);
+}
+
+// ========================================================
+// PARTICLES
+// ========================================================
+function spawnParticles(presetKey) {
+    const modeData = MODES[appMode];
+    const emojis   = modeData.particles(presetKey);
+    const btn      = document.getElementById('fartBtn');
+    const rect     = btn.getBoundingClientRect();
+
+    // Emoji floaters
+    for (let i = 0; i < 8; i++) {
+        const el = document.createElement('div');
+        el.className = 'emoji-particle';
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.left  = (rect.left + rect.width/2 + (Math.random()-0.5)*120) + 'px';
+        el.style.top   = (rect.top  + rect.height/2 + (Math.random()-0.5)*60) + 'px';
+        el.style.animationDelay = (Math.random()*0.4)+'s';
+        el.style.fontSize = (1.5+Math.random()*2)+'rem';
+        document.body.appendChild(el);
+        setTimeout(()=>el.remove(), 2500);
+    }
+
+    // Colour cloud (fart mode only)
+    if (appMode === 'fart') {
+        for (let i = 0; i < 4; i++) {
+            const cloud = document.createElement('div');
+            cloud.className = 'particle-cloud';
+            const size = 40 + Math.random()*80;
+            cloud.style.width  = size+'px';
+            cloud.style.height = size+'px';
+            cloud.style.left   = (rect.left + rect.width/2  - size/2 + (Math.random()-0.5)*100)+'px';
+            cloud.style.top    = (rect.top  + rect.height/2 - size/2 + (Math.random()-0.5)*60)+'px';
+            cloud.style.background = `rgba(${100+Math.random()*50},${200+Math.random()*55},0,0.4)`;
+            cloud.style.animationDelay = (Math.random()*0.3)+'s';
+            document.body.appendChild(cloud);
+            setTimeout(()=>cloud.remove(), 2000);
+        }
+    }
+
+    // Giant stomper
+    const stomperEmoji = modeData.stomper(presetKey);
+    if (stomperEmoji) {
+        const st = document.createElement('div');
+        st.className = 'stomper' + (presetKey.includes('big')||presetKey==='volcano'||presetKey==='explosion_big' ? ' big' : '');
+        st.textContent = stomperEmoji;
+        document.body.appendChild(st);
+        setTimeout(()=>st.remove(), 3000);
+    }
+}
+
+// ========================================================
+// HALL OF FAME
+// ========================================================
+const medals = ['🥇','🥈','🥉'];
+const presetLabelMap = {};
+
+function buildPresetLabelMap() {
+    ['fart','sfx'].forEach(mode => {
+        MODES[mode].presets.forEach(p => {
+            presetLabelMap[mode+'_'+p.key] = p.emoji+' '+p.name;
+        });
+        presetLabelMap[mode+'_custom'] = '🎛️ Custom';
+    });
+}
+
+function renderHallOfFame() {
+    const hof    = hallOfFame[appMode];
+    const modeData = MODES[appMode];
+    const log    = document.getElementById('fart-log');
+    const sorted = Object.entries(hof).sort((a,b)=>b[1]-a[1]);
+    if (sorted.length === 0) {
+        log.innerHTML = `<p style="color:var(--text-dim);text-align:center;font-style:italic;">${modeData.hofEmpty}</p>`;
+        return;
+    }
+    log.innerHTML = sorted.map(([label,count],i) => `
+        <div class="log-entry">
+            <span>${medals[i]||'💨'} ${label}</span>
+            <span class="rating">${count} ${appMode==='sfx'?'shot':'toot'}${count!==1?'s':''}</span>
+        </div>`).join('');
+}
+
+function recordPlay(presetKey) {
+    const modeData = MODES[appMode];
+    const label    = presetLabelMap[appMode+'_'+presetKey] || '🎛️ Custom';
+    const hof      = hallOfFame[appMode];
+    hof[label]     = (hof[label]||0) + 1;
+    renderHallOfFame();
+}
+
+// ========================================================
+// SOUNDBOARD — play preset directly without touching sliders
+// ========================================================
+async function playDirect(key) {
+    await ensureAudioReady();
+    const dur = appMode === 'fart' ? playFartPreset(key) : playSfxPreset(key);
+
+    const btn = document.getElementById('fartBtn');
+    btn.classList.add('firing');
+    setTimeout(()=>btn.classList.remove('firing'), 400);
+
+    spawnParticles(key);
+    startVisualizer(dur);
+
+    playCount++;
+    document.getElementById('counter').textContent = playCount;
+    recordPlay(key);
+}
+
+// ========================================================
+// PRESET LOADING
+// ========================================================
+let activePresetKey = null;
+let activeBuffer    = null;
+
+function loadPreset(key) {
+    const defs = appMode === 'fart' ? fartPresetDefs : sfxPresetDefs;
+    const def  = defs[key];
+    if (!def) return;
+
+    activePresetKey = key;
+    activeBuffer    = appMode === 'fart' ? fartBuffers[def.buf] : sfxBuffers[def.buf];
+
+    // Push params into sliders
+    document.getElementById('duration').value   = def.duration;
+    document.getElementById('pitch').value      = def.pitch;
+    document.getElementById('wetness').value    = def.wetness * 100;
+    document.getElementById('reverb').value     = def.reverb  * 100;
+    document.getElementById('flappiness').value = def.flappiness;
+    document.getElementById('volume').value     = def.volume  * 100;
+    updateLabels();
+
+    // Sync dropdown
+    document.getElementById('loadedSample').value = key;
+}
+
+// ========================================================
+// MAIN PLAY FUNCTIONS
+// ========================================================
+async function unleashSound() {
+    await ensureAudioReady();
+    const params = getParams();
+    let dur;
+    let key = activePresetKey || 'custom';
+
+    if (activeBuffer) {
+        // Special multi-shot patterns
+        if (key === 'machine_gun') {
+            const shots=7, gap=0.19;
+            for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(activeBuffer, params), i*gap*1000);
+            dur = shots * gap;
+        } else if (key === 'morse') {
+            playSampleBuffer(activeBuffer, params);
+            setTimeout(()=>playSampleBuffer(activeBuffer, params), params.duration*1.8*1000);
+            setTimeout(()=>playSampleBuffer(activeBuffer, {...params, duration:params.duration*3.5}), params.duration*3.6*1000);
+            dur = params.duration * 7.5;
+        } else if (key === 'laser_fast') {
+            const shots=5, gap=0.25;
+            for (let i=0; i<shots; i++) setTimeout(()=>playSampleBuffer(activeBuffer, params), i*gap*1000);
+            dur = shots * gap;
+        } else {
+            dur = playSampleBuffer(activeBuffer, params);
+        }
+    } else {
+        // No preset loaded — pick by sliders
+        if (appMode === 'fart') {
+            dur = playSampleBuffer(pickFartBuffer(params.pitch, params.wetness), params);
+        } else {
+            const sfxKeys = Object.keys(sfxBuffers);
+            dur = playSampleBuffer(sfxBuffers[sfxKeys[Math.floor(Math.random()*sfxKeys.length)]], params);
+        }
+    }
+
+    // Visuals
+    const fBtn = document.getElementById('fartBtn');
+    fBtn.classList.add('firing');
+    setTimeout(()=>fBtn.classList.remove('firing'), 400);
+
+    spawnParticles(key);
+    startVisualizer(dur);
+
+    playCount++;
+    document.getElementById('counter').textContent = playCount;
+    recordPlay(key);
+}
+
+// ========================================================
+// MODE SWITCHING
+// ========================================================
+function setAppMode(mode) {
+    appMode = mode;
+    const modeData = MODES[mode];
+    const body     = document.body;
+
+    // Theme
+    body.className = modeData.bodyClass;
+
+    // Toggle buttons
+    document.getElementById('btnFartMode').classList.toggle('active', mode==='fart');
+    document.getElementById('btnSfxMode').classList.toggle('active', mode==='sfx');
+
+    // Text
+    document.title = modeData.pageTitle;
+    document.getElementById('pageTitle').textContent    = modeData.pageTitle;
+    document.getElementById('siteTitle').textContent    = modeData.siteTitle;
+    document.getElementById('siteSubtitle').textContent = modeData.subtitle;
+    document.getElementById('siteTagline').textContent  = modeData.tagline;
+    document.getElementById('counterLabel').textContent = modeData.counterLabel;
+    document.getElementById('btnText').innerHTML        = modeData.btnText;
+    document.getElementById('labTitle').textContent     = modeData.labTitle;
+    document.getElementById('collectionTitle').textContent = modeData.collTitle;
+    document.getElementById('hofSubtitle').textContent  = modeData.hofSubtitle;
+    document.getElementById('footerLine1').innerHTML    = modeData.footerLine1;
+    document.getElementById('footerLine2').innerHTML    = modeData.footerLine2;
+    document.getElementById('footerLine3').textContent  = modeData.footerLine3;
+
+    // Slider labels
+    const s = modeData.sliders;
+    document.getElementById('lblDuration').textContent   = s.duration.label;
+    document.getElementById('descDuration').textContent  = s.duration.desc;
+    document.getElementById('lblPitch').textContent      = s.pitch.label;
+    document.getElementById('descPitch').textContent     = s.pitch.desc;
+    document.getElementById('lblWetness').textContent    = s.wetness.label;
+    document.getElementById('descWetness').textContent   = s.wetness.desc;
+    document.getElementById('lblReverb').textContent     = s.reverb.label;
+    document.getElementById('descReverb').textContent    = s.reverb.desc;
+    document.getElementById('lblFlappiness').textContent = s.flappiness.label;
+    document.getElementById('descFlappiness').textContent= s.flappiness.desc;
+    document.getElementById('lblVolume').textContent     = s.volume.label;
+    document.getElementById('descVolume').textContent    = s.volume.desc;
+
+    // Presets
+    const grid = document.getElementById('presetsGrid');
+    grid.innerHTML = modeData.presets.map(p => `
+        <button class="preset-btn" onclick="playDirect('${p.key}')">
+            <span class="emoji">${p.emoji}</span>
+            <span class="name">${p.name}</span>
+            <span class="desc">${p.desc}</span>
+        </button>`).join('');
+
+    // Reviews
+    const rv = document.getElementById('reviewsContainer');
+    rv.innerHTML = modeData.reviews.map(r => `
+        <div class="review">
+            <div class="stars">${'&#9733;'.repeat(r.stars)}${'&#9734;'.repeat(5-r.stars)}</div>
+            <p>${r.text}</p>
+            <p class="author">- ${r.author}</p>
+        </div>`).join('');
+
+    // Attribution
+    document.getElementById('attributionFart').style.display = mode==='fart' ? '' : 'none';
+    document.getElementById('attributionSfx').style.display  = mode==='sfx'  ? '' : 'none';
+
+    // Populate dropdown and default to first preset
+    const sel = document.getElementById('loadedSample');
+    sel.innerHTML = '<option value="">— Select a sound —</option>' +
+        modeData.presets.map(p => `<option value="${p.key}">${p.emoji} ${p.name}</option>`).join('');
+    // Auto-select first preset if buffers already loaded
+    const firstKey = modeData.presets[0].key;
+    const firstDefs = mode === 'fart' ? fartPresetDefs : sfxPresetDefs;
+    if (firstDefs[firstKey] && (mode === 'fart' ? fartBuffers : sfxBuffers)[firstDefs[firstKey].buf]) {
+        loadPreset(firstKey);
+    } else {
+        activePresetKey = null;
+        activeBuffer    = null;
+        sel.value = '';
+    }
+
+    // Reset counter display, update HOF
+    document.getElementById('counter').textContent = playCount;
+    renderHallOfFame();
+    updateLabels();
+}
+
+// ========================================================
+// SLIDER LABELS
+// ========================================================
+function updateLabels() {
+    const modeData = MODES[appMode];
+    const dur = parseFloat(document.getElementById('duration').value);
+    const durLabel = dur>=10?'The Long Haul':dur>=6?'Evacuation Required':dur>=3?'Lingering':dur>=1.5?'Sustained':'Brief';
+    document.getElementById('durationVal').textContent = `${dur.toFixed(1)}s — ${durLabel}`;
+
+    const pitch = parseFloat(document.getElementById('pitch').value);
+    const pi = Math.min(5, Math.floor((pitch-40)/52));
+    document.getElementById('pitchVal').textContent = ['Subterranean','Bass','Low','Medium','High','Ultrasound'][pi];
+
+    const wet = parseFloat(document.getElementById('wetness').value);
+    const wi = Math.min(6, Math.floor(wet/15));
+    document.getElementById('wetnessVal').textContent = modeData.wetnessLabels[wi];
+
+    const rev = parseFloat(document.getElementById('reverb').value);
+    const ri = Math.min(5, Math.floor(rev/18));
+    document.getElementById('reverbVal').textContent = modeData.reverbLabels[ri];
+
+    const flap = parseFloat(document.getElementById('flappiness').value);
+    const fi = Math.min(4, Math.floor((flap-1)/10));
+    document.getElementById('flappinessVal').textContent = modeData.flappinessLabels[fi];
+
+    const vol = parseFloat(document.getElementById('volume').value);
+    const vi = Math.min(5, Math.floor(vol/18));
+    document.getElementById('volumeVal').textContent = modeData.volumeLabels[vi];
+}
+
+['duration','pitch','wetness','reverb','flappiness','volume'].forEach(id =>
+    document.getElementById(id).addEventListener('input', updateLabels));
+
+// ========================================================
+// DOWNLOAD
+// ========================================================
+async function downloadSite() {
+    const btn = document.querySelector('.download-btn');
+    btn.textContent = '⏳ Zipping...';
+    btn.disabled = true;
+
+    try {
+        const zip = new JSZip();
+
+        // Main HTML — fetch latest committed version from GitHub
+        const htmlRes = await fetch('https://raw.githubusercontent.com/mozltovcoktail/sfx-factory/main/index.html');
+        const htmlSrc = await htmlRes.text();
+        zip.file('index.html', htmlSrc);
+
+        // Fetch and add all audio files
+        const allFiles = [
+            ...Object.entries(FART_SOUNDS).map(([,v])=>v),
+            ...Object.entries(SFX_SOUNDS).map(([,v])=>v),
+        ];
+        await Promise.all(allFiles.map(async path => {
+            try {
+                const res  = await fetch(path);
+                const blob = await res.blob();
+                zip.file(path, blob);
+            } catch(e) { console.warn('Could not add', path); }
+        }));
+
+        // Also fetch wrangler.toml for deployment
+        try {
+            const wranglerRes = await fetch('https://raw.githubusercontent.com/mozltovcoktail/sfx-factory/main/wrangler.toml');
+            zip.file('wrangler.toml', await wranglerRes.text());
+        } catch(e) { console.warn('Could not add wrangler.toml'); }
+
+        // Serve script for local dev
+        const serveScript = `import http.server, os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+http.server.test(HandlerClass=http.server.SimpleHTTPRequestHandler, port=3001, bind="")
+`;
+        zip.file('serve.py', serveScript);
+
+        // README — structured for AI editing
+        const fartFiles = Object.entries(FART_SOUNDS).map(([k,v])=>`  ${v}  (key: "${k}")`).join('\n');
+        const sfxFiles  = Object.entries(SFX_SOUNDS).map(([k,v])=>`  ${v}  (key: "${k}")`).join('\n');
+        const fartPresets = Object.entries(fartPresetDefs).map(([k,v])=>`  ${k}: buf="${v.buf}" duration=${v.duration}s pitch=${v.pitch} wetness=${v.wetness} reverb=${v.reverb} flappiness=${v.flappiness} volume=${v.volume}`).join('\n');
+        const sfxPresets  = Object.entries(sfxPresetDefs).map(([k,v])=>`  ${k}: buf="${v.buf}" duration=${v.duration}s pitch=${v.pitch} wetness=${v.wetness} reverb=${v.reverb} flappiness=${v.flappiness} volume=${v.volume}`).join('\n');
+        const readme = `# Theo & Joah's SFX Factory
+
+A dual-mode interactive sound effects website made for Theo & Joah.
+Entirely self-contained — one \`index.html\` file plus audio sample folders.
+No build step. No framework. No dependencies except a CDN JSZip for the download feature.
+
+## Running locally
+
+Audio requires a server (browsers block Web Audio on file:// URLs).
+
+\`\`\`bash
+python3 serve.py
+# then open http://localhost:3001
+\`\`\`
+
+Or any other static server (npx serve, ruby -run -e httpd, etc).
+
+## Deploying to Cloudflare Pages
+
+Connect the GitHub repo, leave build command and output directory blank.
+\`wrangler.toml\` is already configured.
+
+## File structure
+
+\`\`\`
+index.html          # ENTIRE app — all HTML, CSS, JS in one file
+serve.py            # Local dev server (Python 3)
+wrangler.toml       # Cloudflare Pages deployment config
+sfx/                # Fart mode audio samples (CC0, from Freesound)
+${fartFiles}
+sfx-cool/           # SFX mode audio samples (CC0, from Freesound)
+${sfxFiles}
+\`\`\`
+
+## Architecture
+
+Everything is in \`index.html\`. Sections in the \`<script>\` tag:
+
+### Data
+- **MODES** — all mode-specific content (presets array, labels, reviews, slider configs, particle/stomper maps)
+- **FART_SOUNDS / SFX_SOUNDS** — maps buffer key → file path
+- **fartPresetDefs / sfxPresetDefs** — preset parameters: buf, duration, pitch, wetness, reverb, flappiness, volume
+
+### Audio engine
+- **loadBuffer(ctx, path, store, key)** — fetches + decodes an MP3 into a Web Audio buffer
+- **loadAllSounds()** — loads current mode first (so site is playable immediately), then background-loads the other
+- **playSampleBuffer(buffer, params)** — plays a buffer with granular time-stretch, distortion, tremolo LFO, reverb
+- **makeDistortion(ctx, amount)** — WaveShaper distortion node
+- **makeReverb(ctx, secs)** — convolution reverb with synthetic impulse response
+
+### Playback
+- **playDirect(key)** — plays a preset immediately using preset's own params (soundboard buttons)
+- **loadPreset(key)** — loads preset params into sliders + sets active buffer (dropdown)
+- **unleashSound()** — plays using current slider values against the active buffer (big button / spacebar)
+- **playFartPreset(key)** — fart preset dispatcher (handles machine_gun, morse multi-shot patterns)
+- **playSfxPreset(key)** — SFX preset dispatcher (handles laser_fast burst, slide_whistle pitch ramp, pizza_moon chaos)
+
+### UI
+- **setAppMode(mode)** — switches CSS theme, rebuilds all dynamic DOM (presets grid, dropdown, reviews, labels)
+- **updateLabels()** — refreshes slider value display text
+- **spawnParticles(presetKey)** — emoji floaters, color clouds (fart mode), giant stomper emoji crossing screen
+- **startVisualizer(dur)** — animates the canvas frequency visualizer
+- **downloadSite()** — packages entire site as sfx-factory.zip via JSZip
+
+### CSS
+- Dual theme via CSS custom properties (--accent, --bg1, --bg2, etc.)
+- \`body\` = fart mode (green), \`body.sfx-mode\` = SFX mode (cyan)
+- All transition: 0.4s for smooth mode switching
+
+## Current preset definitions
+
+### Fart mode
+${fartPresets}
+
+### SFX mode
+${sfxPresets}
+
+## How to add a new sound
+
+1. Add the MP3 to \`sfx/\` (fart) or \`sfx-cool/\` (SFX)
+2. Add to \`FART_SOUNDS\` or \`SFX_SOUNDS\`: \`key: 'path/to/file.mp3'\`
+3. Add a preset def to \`fartPresetDefs\` or \`sfxPresetDefs\`
+4. Add to the \`MODES.fart.presets\` or \`MODES.sfx.presets\` array: \`{ key, emoji, name, desc }\`
+5. Optionally add particle emoji to the particles map and a stomper emoji to the stomper map in MODES
+6. Update the attribution \`<p>\` in the footer HTML
+
+## Sound Credits (all CC0 — no attribution required, but we credit anyway)
+
+**Fart sounds:** "Juicy Fart" series by Zott820 via freesound.org
+
+**SFX sounds (all via freesound.org / CC0):**
+- Car Horn: DeVern
+- Laser (blaster): BloodPixelHero
+- Laser (zap): belanhud
+- Wilhelm Scream: qubodup
+- Cash Register: CapsLok
+- Explosion: florianreichelt
+- Sad Trombone: kirbydx
+- Fanfare: Wagna
+- Airhorn: FunWithSound
+- Record Scratch: LiftPizzas
+- Boing: magnuswaker
+- Slide Whistle: SamuelGremaud
+- Applause: Department64
+- Nuke: qubodup
+- Zipper: Sadiquecat
+`;
+        zip.file('README.md', readme);
+
+        // Trigger download
+        const blob = await zip.generateAsync({ type:'blob' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'sfx-factory.zip';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        btn.textContent = '✅ Downloaded!';
+        setTimeout(() => { btn.textContent = '⬇️ Download This Site'; btn.disabled = false; }, 3000);
+    } catch(e) {
+        console.error(e);
+        btn.textContent = '❌ Failed — try again';
+        btn.disabled = false;
+    }
+}
+
+// ========================================================
+// INIT
+// ========================================================
+buildPresetLabelMap();
+setAppMode('sfx');           // render initial state
+
+document.addEventListener('DOMContentLoaded', loadAllSounds);
+
+document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        unleashSound();
+    }
+});
+</script>
+</body>
+</html>

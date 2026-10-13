@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cha-Ching! &mdash; Cash Register Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    /* &#x2500;&#x2500; RESET & ROOT &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #1a0a00;
+      --panel:     #2b1800;
+      --panel2:    #3a2200;
+      --chrome:    #c8902a;
+      --chrome2:   #f0c060;
+      --chrome-dark: #7a5010;
+      --green:     #00ff88;
+      --green-dim: #00994d;
+      --red:       #ff4444;
+      --amber:     #ffb830;
+      --white:     #ffe8c0;
+      --btn-key:   #332200;
+      --btn-key2:  #4a3300;
+      --btn-op:    #5a1500;
+      --btn-op2:   #7a2000;
+      --display-bg:#001a0a;
+      --shadow:    rgba(0,0,0,0.7);
+      --glow-g:    rgba(0,255,136,0.25);
+      --glow-r:    rgba(255,68,68,0.3);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      overflow-x: hidden;
+    }
+
+    /* &#x2500;&#x2500; SCANLINES OVERLAY &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.08) 3px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* &#x2500;&#x2500; LAYOUT &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .game-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 12px 40px;
+    }
+
+    /* &#x2500;&#x2500; HEADER &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(14px, 3vw, 24px);
+      color: var(--chrome2);
+      text-shadow: 0 0 20px var(--chrome), 2px 2px 0 var(--chrome-dark);
+      letter-spacing: 2px;
+      animation: flicker 4s ease-in-out infinite;
+    }
+    .header .sub {
+      font-size: 20px;
+      color: var(--amber);
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+    @keyframes flicker {
+      0%,95%,100% { opacity: 1; }
+      96%          { opacity: 0.4; }
+      97%          { opacity: 1; }
+      98%          { opacity: 0.2; }
+      99%          { opacity: 1; }
+    }
+
+    /* &#x2500;&#x2500; SCOREBOARD &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .scoreboard {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 16px;
+      background: var(--panel);
+      border: 2px solid var(--chrome-dark);
+      border-radius: 8px;
+      padding: 10px 24px;
+      box-shadow: 0 4px 16px var(--shadow);
+    }
+    .score-item {
+      text-align: center;
+    }
+    .score-label {
+      font-size: 14px;
+      color: var(--chrome);
+      display: block;
+    }
+    .score-value {
+      font-size: 28px;
+      color: var(--chrome2);
+      display: block;
+      text-shadow: 0 0 10px var(--chrome);
+    }
+
+    /* &#x2500;&#x2500; CUSTOMER STRIP &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .customer-area {
+      width: 100%;
+      max-width: 680px;
+      background: var(--panel2);
+      border: 2px solid var(--chrome-dark);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      min-height: 90px;
+      position: relative;
+      box-shadow: 0 4px 20px var(--shadow);
+    }
+    .customer-area .cust-label {
+      font-size: 14px;
+      color: var(--chrome);
+      margin-bottom: 4px;
+    }
+    .customer-area .cust-line {
+      font-size: 22px;
+      color: var(--white);
+      line-height: 1.4;
+    }
+    .customer-area .cust-tender {
+      font-size: 20px;
+      color: var(--green);
+      margin-top: 6px;
+    }
+    .customer-emoji {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 48px;
+      filter: drop-shadow(0 0 8px rgba(255,200,80,0.4));
+      animation: bob 2s ease-in-out infinite;
+    }
+    @keyframes bob {
+      0%,100% { transform: translateY(-50%) rotate(-3deg); }
+      50%      { transform: translateY(calc(-50% - 6px)) rotate(3deg); }
+    }
+    .waiting-banner {
+      font-size: 22px;
+      color: var(--amber);
+      text-align: center;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+
+    /* &#x2500;&#x2500; MAIN REGISTER BODY &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .register {
+      width: 100%;
+      max-width: 680px;
+      background: linear-gradient(160deg, #3a2800 0%, #2b1800 60%, #1f1000 100%);
+      border: 3px solid var(--chrome-dark);
+      border-top: 3px solid var(--chrome);
+      border-left: 3px solid var(--chrome);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow:
+        0 12px 40px var(--shadow),
+        inset 0 1px 0 rgba(200,144,42,0.3),
+        inset 0 -2px 8px rgba(0,0,0,0.4);
+    }
+
+    /* &#x2500;&#x2500; DISPLAY &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .display-frame {
+      background: #111;
+      border: 3px solid #111;
+      border-radius: 8px;
+      padding: 6px;
+      margin-bottom: 14px;
+      box-shadow:
+        0 0 0 2px var(--chrome-dark),
+        0 4px 16px rgba(0,0,0,0.8),
+        inset 0 2px 8px rgba(0,0,0,0.9);
+    }
+    .display {
+      background: var(--display-bg);
+      border-radius: 4px;
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: inset 0 0 30px rgba(0,255,100,0.05);
+    }
+    .display-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .display-label {
+      font-size: 16px;
+      color: var(--green-dim);
+    }
+    .display-value {
+      font-size: 32px;
+      color: var(--green);
+      text-shadow: 0 0 12px var(--glow-g);
+      letter-spacing: 2px;
+    }
+    .display-value.big {
+      font-size: 44px;
+    }
+    .display-value.error {
+      color: var(--red);
+      text-shadow: 0 0 12px var(--glow-r);
+    }
+    .display-value.correct {
+      color: var(--chrome2);
+      text-shadow: 0 0 16px var(--chrome);
+    }
+    .display-divider {
+      height: 1px;
+      background: var(--green-dim);
+      opacity: 0.25;
+      margin: 2px 0;
+    }
+    .receipt-items {
+      max-height: 80px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .receipt-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      color: var(--green-dim);
+      line-height: 1.3;
+    }
+    .receipt-item.new {
+      color: var(--green);
+      animation: pop-in 0.2s ease-out;
+    }
+    @keyframes pop-in {
+      from { transform: translateY(-4px); opacity: 0; }
+      to   { transform: none; opacity: 1; }
+    }
+
+    /* &#x2500;&#x2500; ITEM ENTRY DISPLAY &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .entry-display {
+      font-size: 28px;
+      color: var(--amber);
+      text-align: right;
+      letter-spacing: 1px;
+      min-height: 36px;
+      text-shadow: 0 0 10px rgba(255,184,48,0.4);
+      padding-right: 4px;
+    }
+
+    /* &#x2500;&#x2500; KEYBOARD &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .keyboard-area {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    /* shared button base */
+    .key {
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      letter-spacing: 1px;
+      transition: transform 0.07s, box-shadow 0.07s, filter 0.07s;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      padding: 12px 4px;
+      position: relative;
+      top: 0;
+    }
+    .key:active, .key.pressed {
+      transform: translateY(3px);
+      filter: brightness(0.8);
+    }
+
+    /* Numpad keys */
+    .key-num {
+      background: linear-gradient(160deg, var(--btn-key2), var(--btn-key));
+      color: var(--white);
+      border: 2px solid #5a4000;
+      box-shadow: 0 4px 0 #1a1000, 0 6px 12px rgba(0,0,0,0.5);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+    }
+    .key-num:hover { filter: brightness(1.15); }
+
+    /* Operation keys (right column) */
+    .key-op {
+      background: linear-gradient(160deg, var(--btn-op2), var(--btn-op));
+      color: var(--chrome2);
+      border: 2px solid #8a2800;
+      box-shadow: 0 4px 0 #3a0a00, 0 6px 12px rgba(0,0,0,0.5);
+    }
+    .key-op:hover { filter: brightness(1.2); }
+
+    /* Action keys (bottom row / special) */
+    .key-action {
+      background: linear-gradient(160deg, #3a5500, #243300);
+      color: var(--green);
+      border: 2px solid #4a7000;
+      box-shadow: 0 4px 0 #0f1a00, 0 6px 12px rgba(0,0,0,0.5);
+    }
+    .key-action:hover { filter: brightness(1.2); }
+
+    .key-enter {
+      background: linear-gradient(160deg, #c05a00, #6a2a00);
+      color: var(--chrome2);
+      border: 2px solid #e07000;
+      box-shadow: 0 4px 0 #3a1400, 0 6px 12px rgba(0,0,0,0.5);
+      grid-column: span 2;
+    }
+    .key-enter:hover { filter: brightness(1.15); }
+
+    .key-clear {
+      background: linear-gradient(160deg, #4a0000, #2a0000);
+      color: var(--red);
+      border: 2px solid #880000;
+      box-shadow: 0 4px 0 #1a0000, 0 6px 12px rgba(0,0,0,0.5);
+    }
+    .key-clear:hover { filter: brightness(1.3); }
+
+    /* &#x2500;&#x2500; CHANGE TRAY &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .change-tray {
+      margin-top: 14px;
+      background: #111;
+      border: 2px solid var(--chrome-dark);
+      border-radius: 6px;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 46px;
+    }
+    .change-label {
+      font-size: 16px;
+      color: var(--chrome);
+    }
+    .change-value {
+      font-size: 30px;
+      color: var(--amber);
+      text-shadow: 0 0 12px rgba(255,184,48,0.35);
+      letter-spacing: 2px;
+    }
+
+    /* &#x2500;&#x2500; FEEDBACK OVERLAY &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .feedback {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%) scale(0.5);
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(18px, 5vw, 36px);
+      text-align: center;
+      pointer-events: none;
+      z-index: 500;
+      opacity: 0;
+      transition: transform 0.15s, opacity 0.15s;
+      text-shadow: 3px 3px 0 rgba(0,0,0,0.8);
+      padding: 20px 28px;
+      border-radius: 12px;
+      line-height: 1.5;
+    }
+    .feedback.show {
+      opacity: 1;
+      transform: translate(-50%,-50%) scale(1);
+    }
+    .feedback.good {
+      color: var(--chrome2);
+      background: rgba(30,15,0,0.9);
+      border: 3px solid var(--chrome);
+      box-shadow: 0 0 40px var(--chrome), 0 0 80px rgba(200,144,42,0.3);
+    }
+    .feedback.bad {
+      color: var(--red);
+      background: rgba(30,0,0,0.9);
+      border: 3px solid var(--red);
+      box-shadow: 0 0 40px rgba(255,50,50,0.5);
+    }
+
+    /* &#x2500;&#x2500; DRAWER OPEN ANIMATION &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .drawer-strip {
+      height: 14px;
+      background: linear-gradient(to right, var(--chrome-dark), var(--chrome), var(--chrome2), var(--chrome), var(--chrome-dark));
+      border-radius: 0 0 8px 8px;
+      margin-top: 6px;
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.2s;
+    }
+    .drawer-strip.open {
+      transform: scaleY(1);
+    }
+
+    /* &#x2500;&#x2500; COIN PARTICLES &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .coin {
+      position: fixed;
+      font-size: 28px;
+      pointer-events: none;
+      z-index: 300;
+      animation: coin-fly 1.2s cubic-bezier(.2,.8,.4,1) forwards;
+    }
+    @keyframes coin-fly {
+      0%   { opacity: 1; transform: translate(0,0) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(720deg) scale(0.3); }
+    }
+
+    /* &#x2500;&#x2500; GAME OVER / LEVEL &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .overlay {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.88);
+      z-index: 1000;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .overlay h2 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(16px, 4vw, 28px);
+      color: var(--chrome2);
+      text-shadow: 0 0 20px var(--chrome);
+      text-align: center;
+    }
+    .overlay p {
+      font-size: 22px;
+      color: var(--white);
+      text-align: center;
+    }
+    .overlay .big-num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(28px, 7vw, 52px);
+      color: var(--green);
+      text-shadow: 0 0 20px var(--glow-g);
+    }
+    .overlay-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: #000;
+      background: var(--chrome2);
+      border: 3px solid var(--chrome-dark);
+      border-radius: 8px;
+      padding: 14px 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--chrome-dark);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .overlay-btn:hover { filter: brightness(1.1); }
+    .overlay-btn:active { transform: translateY(3px); box-shadow: none; }
+    .hidden { display: none !important; }
+
+    /* &#x2500;&#x2500; DIFFICULTY STARS &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .difficulty-row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .diff-star { font-size: 18px; }
+
+    /* &#x2500;&#x2500; TICKER &#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500; */
+    .ticker-bar {
+      width: 100%;
+      max-width: 680px;
+      height: 10px;
+      background: var(--panel);
+      border-radius: 5px;
+      margin-top: 14px;
+      overflow: hidden;
+      border: 1px solid var(--chrome-dark);
+    }
+    .ticker-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--green-dim), var(--green));
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 6px var(--glow-g);
+    }
+    .ticker-fill.hurry {
+      background: linear-gradient(to right, #cc4400, var(--red));
+      box-shadow: 0 0 6px var(--glow-r);
+    }
+  </style>
+</head>
+<body>
+
+<!-- &#x2550;&#x2550;&#x2550; OVERLAYS &#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550; -->
+<div id="startOverlay" class="overlay">
+  <h2>CHA-CHING!</h2>
+  <p style="color:var(--amber);font-size:26px;">Cash Register Simulator</p>
+  <p style="max-width:400px;text-align:center;line-height:1.5;font-size:20px;color:var(--chrome);">
+    A customer arrives with items.<br>
+    Enter the total on the keypad,<br>
+    then press <span style="color:var(--chrome2)">TENDER</span> to ring it up!<br><br>
+    <span style="font-size:17px;color:var(--green)">Get the change right to score big. &#x23F1; Beat the clock!</span>
+  </p>
+  <button class="overlay-btn" id="startBtn" onclick="startGame()">&#x25B6;  START SHIFT</button>
+</div>
+
+<div id="gameOverOverlay" class="overlay hidden">
+  <h2>SHIFT OVER!</h2>
+  <p>Your final score:</p>
+  <div class="big-num" id="finalScore">0</div>
+  <p id="gameOverMsg" style="color:var(--chrome);max-width:380px;text-align:center;"></p>
+  <button class="overlay-btn" onclick="startGame()">&#x25B6;  NEW SHIFT</button>
+</div>
+
+<!-- &#x2550;&#x2550;&#x2550; MAIN GAME &#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550;&#x2550; -->
+<div class="game-wrapper" id="gameWrapper">
+  <div class="header">
+    <h1>CHA-CHING!</h1>
+    <div class="sub">&#x1F4DF; Cash Register Simulator</div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-item">
+      <span class="score-label">SCORE</span>
+      <span class="score-value" id="scoreDisplay">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">STREAK</span>
+      <span class="score-value" id="streakDisplay">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">CUSTOMERS</span>
+      <span class="score-value" id="custDisplay">0</span>
+    </div>
+    <div class="score-item">
+      <span class="score-label">LEVEL</span>
+      <span class="score-value" id="levelDisplay">1</span>
+    </div>
+  </div>
+
+  <div class="customer-area" id="customerArea">
+    <div class="waiting-banner" id="waitingBanner">PRESS START SHIFT TO BEGIN</div>
+    <div id="customerContent" class="hidden">
+      <div class="cust-label">NEXT CUSTOMER</div>
+      <div class="cust-line" id="custItems">&mdash;</div>
+      <div class="cust-tender" id="custTender">&mdash;</div>
+    </div>
+    <div class="customer-emoji hidden" id="custEmoji">&#x1F9CD;</div>
+  </div>
+
+  <div class="ticker-bar" id="tickerBar">
+    <div class="ticker-fill" id="tickerFill" style="width:100%"></div>
+  </div>
+
+  <!-- REGISTER BODY -->
+  <div class="register" style="margin-top:14px;">
+    <!-- Display -->
+    <div class="display-frame">
+      <div class="display">
+        <div class="receipt-items" id="receiptItems"></div>
+        <div class="display-divider" id="divider1"></div>
+        <div class="display-row">
+          <span class="display-label">TOTAL</span>
+          <span class="display-value big" id="dispTotal">$0.00</span>
+        </div>
+        <div class="display-divider"></div>
+        <div class="display-row">
+          <span class="display-label">YOUR ENTRY</span>
+          <div class="entry-display" id="dispEntry">_</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keypad -->
+    <div class="keyboard-area" id="keypad">
+      <!-- Row 1 -->
+      <button class="key key-num" id="k7"  onclick="pressNum('7')">7</button>
+      <button class="key key-num" id="k8"  onclick="pressNum('8')">8</button>
+      <button class="key key-num" id="k9"  onclick="pressNum('9')">9</button>
+      <button class="key key-op"  id="kbs" onclick="pressBack()">&#x232B;</button>
+      <!-- Row 2 -->
+      <button class="key key-num" id="k4"  onclick="pressNum('4')">4</button>
+      <button class="key key-num" id="k5"  onclick="pressNum('5')">5</button>
+      <button class="key key-num" id="k6"  onclick="pressNum('6')">6</button>
+      <button class="key key-op"  id="kc"  onclick="pressClear()">CLR</button>
+      <!-- Row 3 -->
+      <button class="key key-num" id="k1"  onclick="pressNum('1')">1</button>
+      <button class="key key-num" id="k2"  onclick="pressNum('2')">2</button>
+      <button class="key key-num" id="k3"  onclick="pressNum('3')">3</button>
+      <button class="key key-action" id="k00" onclick="pressNum('00')">00</button>
+      <!-- Row 4 -->
+      <button class="key key-num" id="k0"   onclick="pressNum('0')">0</button>
+      <button class="key key-num" id="kdot" onclick="pressDot()">.</button>
+      <button class="key key-enter" id="kenter" onclick="pressTender()">TENDER &#x23CE;</button>
+    </div>
+
+    <!-- Drawer strip -->
+    <div class="drawer-strip" id="drawerStrip"></div>
+
+    <!-- Change tray -->
+    <div class="change-tray">
+      <span class="change-label">&#x1F4B5; CHANGE DUE</span>
+      <span class="change-value" id="changeDue">$0.00</span>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback -->
+<div class="feedback" id="feedback"></div>
+
+<script>
+// ==============================================================
+// AUDIO ENGINE (Web Audio - procedural, no file loading)
+// ==============================================================
+let ac = null;
+function getAC() {
+  if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+
+function playTone(freq, dur, type='square', vol=0.15, decay=true) {
+  const ctx = getAC();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime);
+  gain.gain.setValueAtTime(vol, ctx.currentTime);
+  if (decay) gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+  osc.start(); osc.stop(ctx.currentTime + dur);
+}
+
+function playKeyClick() {
+  playTone(900, 0.04, 'square', 0.06);
+}
+
+function playChaChingSound() {
+  const ctx = getAC();
+  // Bell 1
+  const bell = (freq, t) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine'; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.3, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    o.start(t); o.stop(t + 0.5);
+  };
+  const t = ctx.currentTime;
+  bell(1200, t); bell(1500, t); bell(1800, t + 0.08); bell(2400, t + 0.14);
+  // Mechanical clunk
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(ctx.sampleRate*0.04));
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g2 = ctx.createGain(); g2.gain.setValueAtTime(0.4, t + 0.06);
+  src.connect(g2); g2.connect(ctx.destination);
+  src.start(t + 0.06);
+}
+
+function playErrorSound() {
+  const ctx = getAC(), t = ctx.currentTime;
+  [200, 150].forEach((f, i) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t + i*0.12);
+    g.gain.setValueAtTime(0.2, t + i*0.12);
+    g.gain.exponentialRampToValueAtTime(0.001, t + i*0.12 + 0.2);
+    o.start(t + i*0.12); o.stop(t + i*0.12 + 0.22);
+  });
+}
+
+function playLevelUp() {
+  const ctx = getAC(), t = ctx.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'square'; o.frequency.setValueAtTime(f, t + i*0.1);
+    g.gain.setValueAtTime(0.12, t + i*0.1);
+    g.gain.exponentialRampToValueAtTime(0.001, t + i*0.1 + 0.18);
+    o.start(t + i*0.1); o.stop(t + i*0.1 + 0.2);
+  });
+}
+
+function playTimeWarning() {
+  playTone(880, 0.1, 'square', 0.1);
+}
+
+// ==============================================================
+// GAME STATE
+// ==============================================================
+const ITEMS = [
+  { name: 'Milk (1 gal.)',  priceRange: [2.49, 5.99] },
+  { name: 'Bread',          priceRange: [1.99, 4.49] },
+  { name: 'Eggs (dozen)',   priceRange: [2.99, 7.99] },
+  { name: 'Bananas',        priceRange: [0.49, 1.29] },
+  { name: 'Apples',         priceRange: [1.49, 3.99] },
+  { name: 'Frozen Pizza',   priceRange: [4.99, 12.99] },
+  { name: 'Soda (2L)',      priceRange: [1.29, 2.79] },
+  { name: 'Chips',          priceRange: [2.49, 5.49] },
+  { name: 'Ice Cream',      priceRange: [3.99, 8.99] },
+  { name: 'Coffee',         priceRange: [5.99, 14.99] },
+  { name: 'Hot Dog Buns',   priceRange: [1.49, 2.99] },
+  { name: 'Ketchup',        priceRange: [2.49, 4.99] },
+  { name: 'Mac & Cheese',   priceRange: [0.89, 2.49] },
+  { name: 'Cereal',         priceRange: [3.49, 7.99] },
+  { name: 'Orange Juice',   priceRange: [3.29, 6.99] },
+  { name: 'Butter',         priceRange: [2.99, 5.99] },
+  { name: 'Cheese (block)', priceRange: [3.99, 8.99] },
+  { name: 'Crackers',       priceRange: [2.49, 4.99] },
+  { name: 'Soup (can)',     priceRange: [0.99, 2.49] },
+  { name: 'BBQ Sauce',      priceRange: [2.99, 5.49] },
+  { name: 'Yogurt',         priceRange: [1.29, 3.99] },
+  { name: 'Granola Bar',    priceRange: [1.49, 3.49] },
+  { name: 'Pasta',          priceRange: [0.99, 2.99] },
+  { name: 'Olive Oil',      priceRange: [4.99, 12.99] },
+  { name: 'Paper Towels',   priceRange: [3.99, 9.99] },
+];
+
+const EMOJIS = ['\u{1F9CD}','\u{1F9D1}','\u{1F469}','\u{1F468}','\u{1F474}','\u{1F475}','\u{1F9D4}','\u{1F469}\u{200D}\u{1F9B1}','\u{1F468}\u{200D}\u{1F9B0}','\u{1F9D5}','\u{1F575}\u{FE0F}','\u{1F477}','\u{1F9D1}\u{200D}\u{1F373}','\u{1F9D1}\u{200D}\u{1F3A4}'];
+
+const TENDERS = [5, 10, 20, 50, 100]; // bills customer might hand over
+
+let score = 0;
+let streak = 0;
+let customersServed = 0;
+let level = 1;
+let currentTransaction = null;
+let entryStr = '';
+let gameActive = false;
+let timerInterval = null;
+let timeLeft = 0;
+let timeMax = 0;
+let gameTimerInterval = null;
+let gameTimeLeft = 0;
+const GAME_DURATION = 90; // seconds per shift
+
+// --------------------------------------------------------------
+function r2(n) { return Math.round(n * 100) / 100; }
+function fmt$(n) { return '$' + n.toFixed(2); }
+
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
+}
+function randItem() {
+  const it = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+  const p = r2(rand(it.priceRange[0], it.priceRange[1]));
+  return { name: it.name, price: p };
+}
+
+function itemCountForLevel() {
+  if (level <= 2) return Math.floor(rand(1, 3));   // 1-2 items
+  if (level <= 4) return Math.floor(rand(2, 4));   // 2-3 items
+  if (level <= 6) return Math.floor(rand(3, 5));   // 3-4 items
+  return Math.floor(rand(4, 7));                    // 4-6 items
+}
+
+function timerForLevel() {
+  // base 18s, loses 1.5s per level, floor 8s
+  return Math.max(8, 20 - (level - 1) * 1.5);
+}
+
+// ==============================================================
+// GENERATE TRANSACTION
+// ==============================================================
+function generateTransaction() {
+  const n = itemCountForLevel();
+  const cartItems = Array.from({ length: n }, () => randItem());
+  const total = r2(cartItems.reduce((s, i) => s + i.price, 0));
+
+  // Pick a tender >= total (next clean bill up or random combo)
+  let tender = TENDERS.find(t => t >= total);
+  if (!tender) tender = Math.ceil(total / 50) * 50;
+  // Sometimes give exact or near-exact change to make it interesting
+  if (Math.random() < 0.1 && level <= 3) tender = total; // exact change
+
+  const change = r2(tender - total);
+  const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+
+  return { cartItems, total, tender, change, emoji };
+}
+
+// ==============================================================
+// UI UPDATES
+// ==============================================================
+function updateScoreboard() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('streakDisplay').textContent = streak;
+  document.getElementById('custDisplay').textContent = customersServed;
+  document.getElementById('levelDisplay').textContent = level;
+}
+
+function updateEntry() {
+  const el = document.getElementById('dispEntry');
+  el.textContent = entryStr || '_';
+  el.className = 'entry-display';
+}
+
+function showCustomer(tx) {
+  document.getElementById('waitingBanner').classList.add('hidden');
+  document.getElementById('customerContent').classList.remove('hidden');
+  document.getElementById('custEmoji').classList.remove('hidden');
+  document.getElementById('custEmoji').textContent = tx.emoji;
+
+  const itemLines = tx.cartItems.map(i => `${i.name}  ${fmt$(i.price)}`).join('\n');
+  document.getElementById('custItems').textContent = itemLines;
+  document.getElementById('custTender').textContent = `\u{1F4B5} Paying with: ${fmt$(tx.tender)}`;
+
+  // Receipt
+  const receipt = document.getElementById('receiptItems');
+  receipt.innerHTML = '';
+  tx.cartItems.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'receipt-item';
+    row.innerHTML = `<span>${it.name}</span><span>${fmt$(it.price)}</span>`;
+    receipt.appendChild(row);
+  });
+
+  // Total display
+  document.getElementById('dispTotal').textContent = fmt$(tx.total);
+  document.getElementById('dispTotal').className = 'display-value big';
+  document.getElementById('changeDue').textContent = '$\u{2014}';
+  entryStr = '';
+  updateEntry();
+}
+
+// ==============================================================
+// TIMER
+// ==============================================================
+function startTransactionTimer() {
+  clearInterval(timerInterval);
+  timeMax = timerForLevel();
+  timeLeft = timeMax;
+  updateTicker();
+
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      updateTicker();
+      clearInterval(timerInterval);
+      onTimeout();
+    } else {
+      updateTicker();
+      if (timeLeft <= 3 && Math.floor(timeLeft * 10) % 3 === 0) {
+        playTimeWarning();
+      }
+    }
+  }, 100);
+}
+
+function updateTicker() {
+  const pct = Math.max(0, timeLeft / timeMax) * 100;
+  const fill = document.getElementById('tickerFill');
+  fill.style.width = pct + '%';
+  fill.className = 'ticker-fill' + (timeLeft <= 3 ? ' hurry' : '');
+}
+
+function stopTransactionTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('tickerFill').style.width = '100%';
+  document.getElementById('tickerFill').className = 'ticker-fill';
+}
+
+function onTimeout() {
+  if (!currentTransaction) return;
+  streak = 0;
+  playErrorSound();
+  showFeedback('\u{23F0} TOO SLOW!', false);
+  document.getElementById('dispTotal').className = 'display-value big error';
+  updateScoreboard();
+  // Show correct change
+  document.getElementById('changeDue').textContent = fmt$(currentTransaction.change);
+  setTimeout(nextCustomer, 2000);
+}
+
+// ==============================================================
+// KEYPAD HANDLERS
+// ==============================================================
+function pressNum(n) {
+  if (!gameActive || !currentTransaction) return;
+  playKeyClick();
+  animKey('k' + n);
+  if (entryStr.length >= 7) return;
+  // Only allow one dot
+  if (n === '00') {
+    if (entryStr === '' || entryStr === '0') return;
+    entryStr += '00';
+  } else {
+    entryStr += n;
+  }
+  // Auto-insert decimal: treat as cents-first (like a real register)
+  updateEntry();
+}
+
+function pressDot() {
+  if (!gameActive || !currentTransaction) return;
+  playKeyClick();
+  animKey('kdot');
+  if (entryStr.includes('.')) return;
+  entryStr = (entryStr || '0') + '.';
+  updateEntry();
+}
+
+function pressBack() {
+  if (!gameActive || !currentTransaction) return;
+  playKeyClick();
+  animKey('kbs');
+  entryStr = entryStr.slice(0, -1);
+  updateEntry();
+}
+
+function pressClear() {
+  if (!gameActive || !currentTransaction) return;
+  playKeyClick();
+  animKey('kc');
+  entryStr = '';
+  updateEntry();
+}
+
+function pressTender() {
+  if (!gameActive || !currentTransaction) return;
+  animKey('kenter');
+
+  const entered = parseFloat(entryStr);
+  if (isNaN(entered)) { playErrorSound(); return; }
+
+  const tx = currentTransaction;
+  const diff = Math.abs(r2(entered) - tx.total);
+  const isCorre = diff < 0.005; // within half a cent
+
+  stopTransactionTimer();
+
+  if (isCorre) {
+    handleCorrect(tx);
+  } else {
+    handleWrong(tx, r2(entered));
+  }
+}
+
+function animKey(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('pressed');
+  setTimeout(() => el.classList.remove('pressed'), 120);
+}
+
+// ==============================================================
+// RESULT HANDLERS
+// ==============================================================
+function handleCorrect(tx) {
+  streak++;
+  customersServed++;
+
+  // Scoring: base 100 + time bonus + streak bonus
+  const timeBonus = Math.floor(timeLeft * 5);
+  const streakBonus = (streak - 1) * 25;
+  const earned = 100 + timeBonus + streakBonus;
+  score += earned;
+
+  playChaChingSound();
+  spawnCoins();
+  openDrawer();
+
+  const msgs = streak >= 5 ? ['\u{1F525} ON FIRE! +' + earned, '\u{1F4B0} STREAK +' + earned, '\u{26A1} BLAZING! +' + earned]
+             : streak >= 3 ? ['\u{1F3AF} GREAT! +' + earned, '\u{2728} NICE! +' + earned]
+             : ['\u{2705} CORRECT! +' + earned, '\u{1F4B0} CHA-CHING! +' + earned, '\u{1F44D} NICE! +' + earned];
+  showFeedback(msgs[Math.floor(Math.random() * msgs.length)], true);
+
+  document.getElementById('dispTotal').className = 'display-value big correct';
+  document.getElementById('changeDue').textContent = fmt$(tx.change);
+
+  // Level up every 5 customers
+  if (customersServed % 5 === 0) {
+    level = Math.min(level + 1, 10);
+    setTimeout(playLevelUp, 400);
+  }
+
+  updateScoreboard();
+  setTimeout(nextCustomer, 2200);
+}
+
+function handleWrong(tx, entered) {
+  streak = 0;
+  playErrorSound();
+
+  const diff = r2(entered - tx.total);
+  const msg = diff > 0
+    ? `\u{274C} $${Math.abs(diff).toFixed(2)} OVER`
+    : `\u{274C} $${Math.abs(diff).toFixed(2)} SHORT`;
+  showFeedback(msg, false);
+
+  document.getElementById('dispTotal').className = 'display-value big error';
+  document.getElementById('changeDue').textContent = fmt$(tx.change);
+
+  updateScoreboard();
+  setTimeout(nextCustomer, 2200);
+}
+
+// ==============================================================
+// FEEDBACK DISPLAY
+// ==============================================================
+let feedbackTimeout = null;
+function showFeedback(msg, good) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.className = 'feedback show ' + (good ? 'good' : 'bad');
+  clearTimeout(feedbackTimeout);
+  feedbackTimeout = setTimeout(() => {
+    el.classList.remove('show');
+  }, 1500);
+}
+
+// ==============================================================
+// DRAWER & COINS
+// ==============================================================
+function openDrawer() {
+  const d = document.getElementById('drawerStrip');
+  d.classList.add('open');
+  setTimeout(() => d.classList.remove('open'), 600);
+}
+
+function spawnCoins() {
+  const coins = ['\u{1F4B0}','\u{1F4B5}','\u{1FA99}','\u{1F48E}'];
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  for (let i = 0; i < 8; i++) {
+    const c = document.createElement('div');
+    c.className = 'coin';
+    c.textContent = coins[Math.floor(Math.random() * coins.length)];
+    const angle = (Math.random() * 360) * Math.PI / 180;
+    const dist = 80 + Math.random() * 160;
+    c.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    c.style.setProperty('--dy', (Math.sin(angle) * dist - 60) + 'px');
+    c.style.left = (cx + Math.random() * 40 - 20) + 'px';
+    c.style.top  = (cy + Math.random() * 40 - 20) + 'px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1300);
+  }
+}
+
+// ==============================================================
+// GAME FLOW
+// ==============================================================
+function nextCustomer() {
+  currentTransaction = null;
+  if (!gameActive) return;
+  currentTransaction = generateTransaction();
+  showCustomer(currentTransaction);
+  startTransactionTimer();
+}
+
+function startGame() {
+  // Hide overlays
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+
+  // Reset state
+  score = 0; streak = 0; customersServed = 0; level = 1;
+  gameActive = true;
+  entryStr = '';
+  updateScoreboard();
+  updateEntry();
+
+  // Reset display
+  document.getElementById('receiptItems').innerHTML = '';
+  document.getElementById('dispTotal').textContent = '$0.00';
+  document.getElementById('dispTotal').className = 'display-value big';
+  document.getElementById('changeDue').textContent = '$0.00';
+
+  // Start game-level timer (90s shift)
+  clearInterval(gameTimerInterval);
+  gameTimeLeft = GAME_DURATION;
+
+  nextCustomer();
+}
+
+function endGame() {
+  gameActive = false;
+  clearInterval(timerInterval);
+  clearInterval(gameTimerInterval);
+  currentTransaction = null;
+
+  document.getElementById('finalScore').textContent = score;
+
+  const msgs = [
+    score >= 3000 ? '\u{1F3C6} Legendary cashier! You\'re a natural!' :
+    score >= 2000 ? '\u{2B50} Great shift! The manager noticed.' :
+    score >= 1000 ? '\u{1F44D} Solid work. Come back tomorrow!' :
+                    '\u{1F605} You\'ll do better next shift. Keep practicing!'
+  ];
+  document.getElementById('gameOverMsg').textContent = msgs[0];
+
+  document.getElementById('gameOverOverlay').classList.remove('hidden');
+}
+
+// ==============================================================
+// KEYBOARD INPUT (physical keyboard support)
+// ==============================================================
+document.addEventListener('keydown', e => {
+  if (!gameActive) return;
+  if (e.key >= '0' && e.key <= '9') { pressNum(e.key); return; }
+  if (e.key === '.') { pressDot(); return; }
+  if (e.key === 'Backspace') { pressBack(); return; }
+  if (e.key === 'Escape') { pressClear(); return; }
+  if (e.key === 'Enter' || e.key === 'Return') { pressTender(); return; }
+});
+
+// ==============================================================
+// GAME-LEVEL COUNTDOWN (90s shift)
+// ==============================================================
+// We drive this from the transaction loop; after each completed
+// transaction we check elapsed time.
+let shiftStart = 0;
+const _origNextCustomer = nextCustomer;
+
+function nextCustomerWithTimer() {
+  if (!gameActive) return;
+  const elapsed = (Date.now() - shiftStart) / 1000;
+  if (elapsed >= GAME_DURATION) {
+    endGame();
+    return;
+  }
+  currentTransaction = generateTransaction();
+  showCustomer(currentTransaction);
+  startTransactionTimer();
+}
+
+// Patch nextCustomer to also check shift timer
+const patchedNext = () => {
+  if (!gameActive) return;
+  const elapsed = (Date.now() - shiftStart) / 1000;
+  if (elapsed >= GAME_DURATION) { endGame(); return; }
+  currentTransaction = generateTransaction();
+  showCustomer(currentTransaction);
+  startTransactionTimer();
+};
+
+// Override the whole start to set shiftStart
+const _origStart = startGame;
+function startGame() {
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  score = 0; streak = 0; customersServed = 0; level = 1;
+  gameActive = true; entryStr = '';
+  updateScoreboard(); updateEntry();
+  document.getElementById('receiptItems').innerHTML = '';
+  document.getElementById('dispTotal').textContent = '$0.00';
+  document.getElementById('dispTotal').className = 'display-value big';
+  document.getElementById('changeDue').textContent = '$0.00';
+  shiftStart = Date.now();
+  generateAndShow();
+}
+
+function generateAndShow() {
+  if (!gameActive) return;
+  const elapsed = (Date.now() - shiftStart) / 1000;
+  if (elapsed >= GAME_DURATION) { endGame(); return; }
+  currentTransaction = generateTransaction();
+  showCustomer(currentTransaction);
+  startTransactionTimer();
+}
+
+// Re-wire the handlers to use generateAndShow as nextCustomer
+function nextCustomer() { generateAndShow(); }
+
+// Re-wire the start btn
+document.getElementById('startBtn').onclick = startGame;
+</script>
+
+</body>
+</html>
